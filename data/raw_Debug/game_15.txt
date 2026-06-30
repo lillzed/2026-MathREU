@@ -1,0 +1,436 @@
+Listening on 8080
+Player 0 connected (lvl 2 bot)
+Player 1 connected (lvl 2 bot)
+Player 2 connected (lvl 2 bot)
+Player 3 connected (lvl 2 bot)
+Game starting
+Shuffling and Dealing
+Betting round starting
+Player 0 bet 6H
+Player 1 passed
+Player 2 bet 7D
+Player 3 passed
+Player 0 bet 7H
+Player 2 passed
+Player 0 passed
+Player 0 won the bet with 7H!
+Betting round ending
+Dealing kitty
+Kitty: 7H KD QD
+Discarded: 5D
+Discarded: 8S
+Discarded: QC
+Kitty finished
+Game Begins
+Player 0 played JOKER. Player 0 winning with JOKER
+Player 1 played 4H. Player 0 winning with JOKER
+Player 2 played QH. Player 0 winning with JOKER
+Player 3 played 5H. Player 0 won with JOKER
+Betting team has won 1 trick(s)
+Player 0 played JD. Player 0 winning with JD
+Player 1 played AH. Player 0 winning with JD
+Player 2 played KH. Player 0 winning with JD
+Player 3 played 4D. Player 0 won with JD
+Betting team has won 2 trick(s)
+Player 0 played AD. Player 0 winning with AD
+Player 1 played 8D. Player 0 winning with AD
+Player 2 played 7D. Player 0 winning with AD
+Player 3 played 6D. Player 0 won with AD
+Betting team has won 3 trick(s)
+Player 0 played AS. Player 0 winning with AS
+Player 1 played 5S. Player 0 winning with AS
+Player 2 played 7S. Player 0 winning with AS
+Player 3 played 6S. Player 0 won with AS
+Betting team has won 4 trick(s)
+Player 0 played KD. Player 0 winning with KD
+Player 1 played 6H. Player 1 winning with 6H
+Player 2 played 10D. Player 1 winning with 6H
+Player 3 played 5C. Player 1 won with 6H
+Betting team has won 4 trick(s)
+Player 1 played KS. Player 1 winning with KS
+Player 2 played JH. Player 2 winning with JH
+Player 3 played 9S. Player 2 winning with JH
+Player 0 played QD. Player 2 won with JH
+Betting team has won 5 trick(s)
+Player 2 played KC. Player 2 winning with KC
+Player 3 played AC. Player 3 winning with AC
+Player 0 played 7H. Player 0 winning with 7H
+Player 1 played 10C. Player 0 won with 7H
+Betting team has won 6 trick(s)
+Player 0 played 10H. Player 0 winning with 10H
+Player 1 played 7C. Player 0 winning with 10H
+Player 2 played 6C. Player 0 winning with 10H
+Player 3 played 8C. Player 0 won with 10H
+Betting team has won 7 trick(s)
+Player 0 played 9H. Player 0 winning with 9H
+Player 1 played JS. Player 0 winning with 9H
+Player 2 played 9D. Player 0 winning with 9H
+Player 3 played 9C. Player 0 won with 9H
+Betting team has won 8 trick(s)
+Player 0 played 8H. Player 0 winning with 8H
+Player 1 played QS. Player 0 winning with 8H
+Player 2 played JC. Player 0 winning with 8H
+Player 3 played 10S. Player 0 won with 8H
+Betting team has won 9 trick(s)
+Betting team won!
+Team 0 points: 200
+Team 1 points: 10
+Shuffling and Dealing
+Betting round starting
+Player 1 bet 6C
+Player 2 passed
+Player 3 bet 6H
+Player 0 passed
+Player 1 passed
+Player 3 passed
+Player 3 won the bet with 6H!
+Betting round ending
+Dealing kitty
+Kitty: AH 9S 10C
+Discarded: 7C
+Discarded: 9S
+Discarded: 10C
+Kitty finished
+Game Begins
+Player 3 played JOKER. Player 3 winning with JOKER
+Player 0 played 9H. Player 3 winning with JOKER
+Player 1 played 5H. Player 3 winning with JOKER
+Player 2 played 8H. Player 3 won with JOKER
+Betting team has won 1 trick(s)
+Player 3 played AH. Player 3 winning with AH
+Player 0 played JH. Player 0 winning with JH
+Player 1 played 5D. Player 0 winning with JH
+Player 2 played QH. Player 0 won with JH
+Betting team has won 1 trick(s)
+Player 0 played KD. Player 0 winning with KD
+Player 1 played 7D. Player 0 winning with KD
+Player 2 played 4D. Player 0 winning with KD
+Player 3 played AD. Player 3 won with AD
+Betting team has won 2 trick(s)
+Player 3 played KC. Player 3 winning with KC
+Player 0 played 8C. Player 3 winning with KC
+Player 1 played 6C. Player 3 winning with KC
+Player 2 played 5C. Player 3 won with KC
+Betting team has won 3 trick(s)
+Player 3 played KS. Player 3 winning with KS
+Player 0 played 5S. Player 3 winning with KS
+Player 1 played 7S. Player 3 winning with KS
+Player 2 played 6S. Player 3 won with KS
+Betting team has won 4 trick(s)
+Player 3 played QD. Player 3 winning with QD
+Player 0 played 8D. Player 3 winning with QD
+Player 1 played JS. Player 3 winning with QD
+Player 2 played 6D. Player 3 won with QD
+Betting team has won 5 trick(s)
+Player 3 played 10H. Player 3 winning with 10H
+Player 0 played 8S. Player 3 winning with 10H
+Player 1 played QS. Player 3 winning with 10H
+Player 2 played JD. Player 2 won with JD
+Betting team has won 5 trick(s)
+Player 2 played KH. Player 2 winning with KH
+Player 3 played 4H. Player 2 winning with KH
+Player 0 played 9C. Player 2 winning with KH
+Player 1 played QC. Player 2 won with KH
+Betting team has won 5 trick(s)
+Player 2 played JC. Player 2 winning with JC
+Player 3 played 6H. Player 3 winning with 6H
+Player 0 played 9D. Player 3 winning with 6H
+Player 1 played AC. Player 3 won with 6H
+Betting team has won 6 trick(s)
+Player 3 played 7H. Player 3 winning with 7H
+Player 0 played 10D. Player 3 winning with 7H
+Player 1 played AS. Player 3 winning with 7H
+Player 2 played 10S. Player 3 won with 7H
+Betting team has won 7 trick(s)
+Betting team won!
+Team 0 points: 230
+Team 1 points: 110
+Shuffling and Dealing
+Betting round starting
+Player 2 bet 6D
+Player 3 bet 7C
+Player 0 passed
+Player 1 bet 7H
+Player 2 passed
+Player 3 passed
+Player 1 passed
+Player 1 won the bet with 7H!
+Betting round ending
+Dealing kitty
+Kitty: JC 8H QD
+Discarded: 7S
+Discarded: 9S
+Discarded: JC
+Kitty finished
+Game Begins
+Player 1 played JOKER. Player 1 winning with JOKER
+Player 2 played 7H. Player 1 winning with JOKER
+Player 3 played 6H. Player 1 winning with JOKER
+Player 0 played 4H. Player 1 won with JOKER
+Betting team has won 1 trick(s)
+Player 1 played AH. Player 1 winning with AH
+Player 2 played 10H. Player 1 winning with AH
+Player 3 played JH. Player 3 winning with JH
+Player 0 played 5C. Player 3 won with JH
+Betting team has won 2 trick(s)
+Player 3 played AD. Player 3 winning with AD
+Player 0 played 5D. Player 3 winning with AD
+Player 1 played QD. Player 3 winning with AD
+Player 2 played 6D. Player 3 won with AD
+Betting team has won 3 trick(s)
+Player 3 played KD. Player 3 winning with KD
+Player 0 played 8D. Player 3 winning with KD
+Player 1 played QC. Player 3 winning with KD
+Player 2 played 7D. Player 3 won with KD
+Betting team has won 4 trick(s)
+Player 3 played KC. Player 3 winning with KC
+Player 0 played 7C. Player 3 winning with KC
+Player 1 played AC. Player 1 winning with AC
+Player 2 played 10C. Player 1 won with AC
+Betting team has won 5 trick(s)
+Player 1 played KH. Player 1 winning with KH
+Player 2 played JD. Player 2 winning with JD
+Player 3 played 4D. Player 2 winning with JD
+Player 0 played 8S. Player 2 won with JD
+Betting team has won 5 trick(s)
+Player 2 played AS. Player 2 winning with AS
+Player 3 played 5S. Player 2 winning with AS
+Player 0 played 10S. Player 2 winning with AS
+Player 1 played 5H. Player 1 won with 5H
+Betting team has won 6 trick(s)
+Player 1 played QH. Player 1 winning with QH
+Player 2 played 6S. Player 1 winning with QH
+Player 3 played 6C. Player 1 winning with QH
+Player 0 played 9D. Player 1 won with QH
+Betting team has won 7 trick(s)
+Player 1 played 9H. Player 1 winning with 9H
+Player 2 played 10D. Player 1 winning with 9H
+Player 3 played 8C. Player 1 winning with 9H
+Player 0 played JS. Player 1 won with 9H
+Betting team has won 8 trick(s)
+Player 1 played 8H. Player 1 winning with 8H
+Player 2 played QS. Player 1 winning with 8H
+Player 3 played 9C. Player 1 winning with 8H
+Player 0 played KS. Player 1 won with 8H
+Betting team has won 9 trick(s)
+Betting team won!
+Team 0 points: 240
+Team 1 points: 310
+Shuffling and Dealing
+Betting round starting
+Player 3 bet 6D
+Player 0 bet 6H
+Player 1 bet 7C
+Player 2 passed
+Player 3 bet 7D
+Player 0 bet 7H
+Player 1 bet 8C
+Player 3 bet 8D
+Player 0 passed
+Player 1 passed
+Player 3 passed
+Player 3 won the bet with 8D!
+Betting round ending
+Dealing kitty
+Kitty: KD 9D 9C
+Discarded: 8C
+Discarded: 9C
+Discarded: QS
+Kitty finished
+Game Begins
+Player 3 played JD. Player 3 winning with JD
+Player 0 played JOKER. Player 0 winning with JOKER
+Player 1 played 10D. Player 0 winning with JOKER
+Player 2 played 6D. Player 0 won with JOKER
+Betting team has won 0 trick(s)
+Player 0 played JH. Player 0 winning with JH
+Player 1 played AD. Player 0 winning with JH
+Player 2 played 7D. Player 0 winning with JH
+Player 3 played KD. Player 0 won with JH
+Betting team has won 0 trick(s)
+Player 0 played AC. Player 0 winning with AC
+Player 1 played 5C. Player 0 winning with AC
+Player 2 played 10C. Player 0 winning with AC
+Player 3 played KC. Player 0 won with AC
+Betting team has won 0 trick(s)
+Player 0 played 10H. Player 0 winning with 10H
+Player 1 played KH. Player 1 winning with KH
+Player 2 played 4H. Player 1 winning with KH
+Player 3 played QH. Player 1 won with KH
+Betting team has won 1 trick(s)
+Player 1 played QC. Player 1 winning with QC
+Player 2 played QD. Player 2 winning with QD
+Player 3 played KS. Player 2 winning with QD
+Player 0 played 7C. Player 2 won with QD
+Betting team has won 1 trick(s)
+Player 2 played 9H. Player 2 winning with 9H
+Player 3 played AH. Player 3 winning with AH
+Player 0 played 6H. Player 3 winning with AH
+Player 1 played 7H. Player 3 won with AH
+Betting team has won 2 trick(s)
+Player 3 played AS. Player 3 winning with AS
+Player 0 played 6S. Player 3 winning with AS
+Player 1 played 8S. Player 3 winning with AS
+Player 2 played 5S. Player 3 won with AS
+Betting team has won 3 trick(s)
+Player 3 played 9D. Player 3 winning with 9D
+Player 0 played 4D. Player 3 winning with 9D
+Player 1 played 6C. Player 3 winning with 9D
+Player 2 played 5H. Player 3 won with 9D
+Betting team has won 4 trick(s)
+Player 3 played 8D. Player 3 winning with 8D
+Player 0 played 8H. Player 3 winning with 8D
+Player 1 played JS. Player 3 winning with 8D
+Player 2 played 7S. Player 3 won with 8D
+Betting team has won 5 trick(s)
+Player 3 played 5D. Player 3 winning with 5D
+Player 0 played 10S. Player 3 winning with 5D
+Player 1 played JC. Player 3 winning with 5D
+Player 2 played 9S. Player 3 won with 5D
+Betting team has won 6 trick(s)
+Betting team lost!
+Team 0 points: 280
+Team 1 points: 30
+Shuffling and Dealing
+Betting round starting
+Player 0 bet 6H
+Player 1 bet 7C
+Player 2 passed
+Player 3 bet 7D
+Player 0 bet 7H
+Player 1 passed
+Player 3 passed
+Player 0 passed
+Player 0 won the bet with 7H!
+Betting round ending
+Dealing kitty
+Kitty: 5S 4H 9H
+Discarded: 5S
+Discarded: 5C
+Discarded: 9S
+Kitty finished
+Game Begins
+Player 0 played JD. Player 0 winning with JD
+Player 1 played JOKER. Player 1 winning with JOKER
+Player 2 played 5H. Player 1 winning with JOKER
+Player 3 played JH. Player 1 won with JOKER
+Betting team has won 0 trick(s)
+Player 1 played AD. Player 1 winning with AD
+Player 2 played 5D. Player 1 winning with AD
+Player 3 played 4D. Player 1 winning with AD
+Player 0 played 4H. Player 0 won with 4H
+Betting team has won 1 trick(s)
+Player 0 played KH. Player 0 winning with KH
+Player 1 played 10H. Player 0 winning with KH
+Player 2 played 6H. Player 0 winning with KH
+Player 3 played 6S. Player 0 won with KH
+Betting team has won 2 trick(s)
+Player 0 played KC. Player 0 winning with KC
+Player 1 played 7C. Player 0 winning with KC
+Player 2 played 8C. Player 0 winning with KC
+Player 3 played AC. Player 3 won with AC
+Betting team has won 2 trick(s)
+Player 3 played QD. Player 3 winning with QD
+Player 0 played 7H. Player 0 winning with 7H
+Player 1 played KD. Player 0 winning with 7H
+Player 2 played 6D. Player 0 won with 7H
+Betting team has won 3 trick(s)
+Player 0 played KS. Player 0 winning with KS
+Player 1 played AS. Player 1 winning with AS
+Player 2 played 7S. Player 1 winning with AS
+Player 3 played 10S. Player 1 won with AS
+Betting team has won 3 trick(s)
+Player 1 played QS. Player 1 winning with QS
+Player 2 played JS. Player 1 winning with QS
+Player 3 played 6C. Player 1 winning with QS
+Player 0 played 8H. Player 0 won with 8H
+Betting team has won 4 trick(s)
+Player 0 played QH. Player 0 winning with QH
+Player 1 played 8S. Player 0 winning with QH
+Player 2 played AH. Player 2 winning with AH
+Player 3 played 7D. Player 2 won with AH
+Betting team has won 5 trick(s)
+Player 2 played QC. Player 2 winning with QC
+Player 3 played 10C. Player 2 winning with QC
+Player 0 played JC. Player 2 winning with QC
+Player 1 played 9C. Player 2 won with QC
+Betting team has won 6 trick(s)
+Player 2 played 9D. Player 2 winning with 9D
+Player 3 played 10D. Player 3 winning with 10D
+Player 0 played 9H. Player 0 winning with 9H
+Player 1 played 8D. Player 0 won with 9H
+Betting team has won 7 trick(s)
+Betting team won!
+Team 0 points: 480
+Team 1 points: 60
+Shuffling and Dealing
+Betting round starting
+Player 1 bet 6H
+Player 2 bet 7D
+Player 3 passed
+Player 0 bet 7H
+Player 1 passed
+Player 2 passed
+Player 0 passed
+Player 0 won the bet with 7H!
+Betting round ending
+Dealing kitty
+Kitty: QC AH 5S
+Discarded: 5S
+Discarded: 6C
+Discarded: 6D
+Kitty finished
+Game Begins
+Player 0 played JOKER. Player 0 winning with JOKER
+Player 1 played 10H. Player 0 winning with JOKER
+Player 2 played KH. Player 0 winning with JOKER
+Player 3 played 4H. Player 0 won with JOKER
+Betting team has won 1 trick(s)
+Player 0 played AH. Player 0 winning with AH
+Player 1 played QH. Player 0 winning with AH
+Player 2 played 5C. Player 0 winning with AH
+Player 3 played 6H. Player 0 won with AH
+Betting team has won 2 trick(s)
+Player 0 played KD. Player 0 winning with KD
+Player 1 played 5D. Player 0 winning with KD
+Player 2 played 7D. Player 0 winning with KD
+Player 3 played AD. Player 3 won with AD
+Betting team has won 2 trick(s)
+Player 3 played JD. Player 3 winning with JD
+Player 0 played 5H. Player 3 winning with JD
+Player 1 played JH. Player 1 winning with JH
+Player 2 played 6S. Player 1 won with JH
+Betting team has won 2 trick(s)
+Player 1 played AC. Player 1 winning with AC
+Player 2 played JC. Player 1 winning with AC
+Player 3 played 4D. Player 1 winning with AC
+Player 0 played 9C. Player 1 won with AC
+Betting team has won 2 trick(s)
+Player 1 played KS. Player 1 winning with KS
+Player 2 played AS. Player 2 winning with AS
+Player 3 played 7S. Player 2 winning with AS
+Player 0 played 10S. Player 2 won with AS
+Betting team has won 3 trick(s)
+Player 2 played QD. Player 2 winning with QD
+Player 3 played 8H. Player 3 winning with 8H
+Player 0 played 9H. Player 0 winning with 9H
+Player 1 played 9D. Player 0 won with 9H
+Betting team has won 4 trick(s)
+Player 0 played KC. Player 0 winning with KC
+Player 1 played 7C. Player 0 winning with KC
+Player 2 played 8D. Player 0 winning with KC
+Player 3 played 8S. Player 0 won with KC
+Betting team has won 5 trick(s)
+Player 0 played QC. Player 0 winning with QC
+Player 1 played 8C. Player 0 winning with QC
+Player 2 played 10D. Player 0 winning with QC
+Player 3 played 9S. Player 0 won with QC
+Betting team has won 6 trick(s)
+Player 0 played 7H. Player 0 winning with 7H
+Player 1 played 10C. Player 0 winning with 7H
+Player 2 played QS. Player 0 winning with 7H
+Player 3 played JS. Player 0 won with 7H
+Betting team has won 7 trick(s)
+Betting team won!
+Team 0 points: 680
+Team 1 points: 90
