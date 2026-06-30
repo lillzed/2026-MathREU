@@ -1,0 +1,6 @@
+data/raw/
+500/*.o
+500/server.exe
+500/server
+500/client.exe
+500/client
