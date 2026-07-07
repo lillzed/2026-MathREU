@@ -1,4 +1,5 @@
 data/raw/
+__pycache__/
 500/*.o
 500/server.exe
 500/server
