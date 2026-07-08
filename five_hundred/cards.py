@@ -1,18 +1,3 @@
-"""Card representation and comparison rules for this project's 500 deck.
-
-Cards are plain ints 0..42 (43-card deck). This mirrors 500/cards.c
-create_deck exactly: ranks 5-14 ("5".."A") in all 4 suits (40 cards), plus
-only the *red* 4s (4D, 4H - no black 4s), plus the Joker.
-
-Card id layout (not required to match the C server's internal order,
-only its composition - id assignment here is just a convenient encoding):
-    0..39  -> rank in [5..14], suit in [SPADES,CLUBS,DIAMONDS,HEARTS],
-              id = (rank - 5) * 4 + suit
-    40     -> 4 of Diamonds
-    41     -> 4 of Hearts
-    42     -> Joker
-"""
-
 SPADES, CLUBS, DIAMONDS, HEARTS, NO_TRUMPS = 0, 1, 2, 3, 4
 SUITS = (SPADES, CLUBS, DIAMONDS, HEARTS)
 SUIT_CHARS = {SPADES: "S", CLUBS: "C", DIAMONDS: "D", HEARTS: "H", NO_TRUMPS: "N"}
@@ -24,10 +9,9 @@ LEFT_BOWER, RIGHT_BOWER, JOKER_VALUE = 15, 16, 17
 JOKER = 42
 NUM_CARDS = 43
 
-# same-colour suit pairs, used for the bower rule (jack of trump's colour
-# becomes the "left bower" and counts as trump)
 SAME_COLOUR = {(SPADES, CLUBS), (CLUBS, SPADES), (DIAMONDS, HEARTS), (HEARTS, DIAMONDS)}
 
+# For each card, assign it an ID from 0-42 and fill the dictionaries _RANK_OF and _SUIT_OF by [ID: rank/suit].
 _RANK_OF = {}
 _SUIT_OF = {}
 for _rank in range(5, 15):
@@ -42,28 +26,34 @@ _RANK_OF[JOKER], _SUIT_OF[JOKER] = JOKER_VALUE, NO_TRUMPS
 _RANK_CHARS = {JACK: "J", QUEEN: "Q", KING: "K", ACE: "A"}
 
 
-def rank_of(card):
+def rank_of(card: int) -> int:
+    """
+    Given the ID of a card, returns the rank of the card.
+    """
     return _RANK_OF[card]
 
 
-def suit_of(card):
+def suit_of(card: int) -> int:
+    """
+    Given the ID of a card, returns the ID of the suit of the card.
+    """
     return _SUIT_OF[card]
 
 
-def format_card(card):
-    """Human-readable token, e.g. "8H", "10S", "JOKER" - for debugging/render only."""
+def format_card(card: int) -> str:
+    """
+    Given the ID of a card, returns a string representation of the card.
+    """
     if card == JOKER:
         return "JOKER"
     rank, suit = _RANK_OF[card], _SUIT_OF[card]
     return f"{_RANK_CHARS.get(rank, str(rank))}{SUIT_CHARS[suit]}"
 
 
-def effective_card(card, trump, joker_suit):
-    """Returns (effective_value, effective_suit) for trick comparison and
-    follow-suit checks. Mirrors cards.c handle_bower, plus the joker-suit
-    substitution server.c applies (get_valid_card_from_player) before
-    calling correct_suit_player/compare_cards: the joker always counts as
-    the trump suit, or joker_suit when trump is no-trumps."""
+def effective_card(card: int, trump: int, joker_suit: int) -> tuple[int, int]:
+    """
+    Given the ID of a card, trump suit, and joker_suit, returns the tuple of the effective rank and suit of the card.
+    """
     if card == JOKER:
         suit = joker_suit if trump == NO_TRUMPS else trump
         return JOKER_VALUE, suit
@@ -78,13 +68,17 @@ def effective_card(card, trump, joker_suit):
     return value, suit
 
 
-def effective_suit(card, trump, joker_suit):
+def effective_suit(card: int, trump: int, joker_suit: int) -> int:
+    """
+    Given the ID of a card, trump suit, and joker_suit, returns the effective suit of the card.
+    """
     return effective_card(card, trump, joker_suit)[1]
 
 
-def compare_cards(a, b, trump, joker_suit):
-    """Returns 1 if card a beats card b, else -1 (0 only if a == b).
-    b is the card currently winning the trick. Mirrors cards.c compare_cards."""
+def compare_cards(a: int, b: int, trump: int, joker_suit: int) -> int:
+    """
+    Given the ID's of two cards, the trump suit, and the joker_suit, returns 0 if the cards are equal, 1 if a beats b, and -1 if b beats a
+    """
     if a == b:
         return 0
     va, sa = effective_card(a, trump, joker_suit)
