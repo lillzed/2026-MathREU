@@ -11,7 +11,6 @@ NUM_CARDS = 43
 
 SAME_COLOUR = {(SPADES, CLUBS), (CLUBS, SPADES), (DIAMONDS, HEARTS), (HEARTS, DIAMONDS)}
 
-# For each card, assign it an ID from 0-42 and fill the dictionaries _RANK_OF and _SUIT_OF by [ID: rank/suit].
 _RANK_OF = {}
 _SUIT_OF = {}
 for _rank in range(5, 15):
@@ -28,21 +27,39 @@ _RANK_CHARS = {JACK: "J", QUEEN: "Q", KING: "K", ACE: "A"}
 
 def rank_of(card: int) -> int:
     """
-    Given the ID of a card, returns the rank of the card.
+    Find the rank of a card.
+
+    Input:
+    - card (int) : the ID of the card
+
+    Output (int):
+    - the rank of the card
     """
     return _RANK_OF[card]
 
 
 def suit_of(card: int) -> int:
     """
-    Given the ID of a card, returns the ID of the suit of the card.
+    Find the suit of a card.
+
+    Input:
+    - card (int) : the ID of the card
+
+    Output (int):
+    - the ID of the suit of the card
     """
     return _SUIT_OF[card]
 
 
 def format_card(card: int) -> str:
     """
-    Given the ID of a card, returns a string representation of the card.
+    Create a string representation of a card.
+
+    Input:
+    - card (int) : the ID of the card
+
+    Output (str):
+    - a string representation of the card in the form "{rank}{suit}"
     """
     if card == JOKER:
         return "JOKER"
@@ -52,7 +69,16 @@ def format_card(card: int) -> str:
 
 def effective_card(card: int, trump: int, joker_suit: int) -> tuple[int, int]:
     """
-    Given the ID of a card, trump suit, and joker_suit, returns the tuple of the effective rank and suit of the card.
+    Find the effective rank and suit of a card.
+
+    Input:
+    - card (int) : the ID of the card
+    - trump (int) : the ID of the trump suit
+    - joker_suit (int) : the ID of the joker's suit
+
+    Output (tuple[int, int]):
+    - an effective rank of the card relative to other cards in the effective suit
+    - the ID of the effective suit of the card
     """
     if card == JOKER:
         suit = joker_suit if trump == NO_TRUMPS else trump
@@ -70,14 +96,33 @@ def effective_card(card: int, trump: int, joker_suit: int) -> tuple[int, int]:
 
 def effective_suit(card: int, trump: int, joker_suit: int) -> int:
     """
-    Given the ID of a card, trump suit, and joker_suit, returns the effective suit of the card.
+    Find the effective suit of a card.
+
+    Input:
+    - card (int) : the ID of the card
+    - trump (int) : the ID of the trump suit
+    - joker_suit (int) : the ID of the joker's suit
+
+    Output:
+    - the ID of the effective suit of the card
     """
     return effective_card(card, trump, joker_suit)[1]
 
 
 def compare_cards(a: int, b: int, trump: int, joker_suit: int) -> int:
     """
-    Given the ID's of two cards, the trump suit, and the joker_suit, returns 0 if the cards are equal, 1 if a beats b, and -1 if b beats a
+    Compute which of two cards is superior.
+
+    Input:
+    - a (int) : the ID of a card
+    - b (int) : the ID of a card
+    - trump (int) : the ID of the trump suit
+    - joker_suit (int) : the ID of the joker_suit
+
+    Output (int):g
+    - 0 if 'a' and 'b' are the same
+    - 1 if 'a' is superior to 'b'
+    - -1 otherwise
     """
     if a == b:
         return 0

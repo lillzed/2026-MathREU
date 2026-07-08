@@ -1,9 +1,3 @@
-"""Game-wide constants for this project's variant of 500.
-
-Values here are pinned to the reference C implementation in 500/server.c
-and 500/cards.c (server.h: NUM_ROUNDS=10, NUM_PLAYERS=4, WIN_POINTS=500).
-"""
-
 from enum import Enum, auto
 
 NUM_PLAYERS = 4
@@ -24,8 +18,15 @@ class Phase(Enum):
     GAME_OVER = auto()
 
 
-def bid_points(value, suit):
-    """Points for a normal (non-misere) contract. Mirrors server.c
-    get_points_from_bet: (4 + suit*2)*10 + (bid-6)*100, i.e. S=40,C=60,
-    D=80,H=100,NT=120 base plus 100 per trick bid above 6."""
+def bid_points(value: int, suit: int) -> int:
+    """
+    Calculate the point value of a bid.
+
+    Input:
+    value (int): the value of the bid
+    suit (int): the ID of the suit of the bid
+
+    Output (int):
+    - the point value of the bid
+    """
     return (4 + suit * 2) * 10 + (value - 6) * 100
