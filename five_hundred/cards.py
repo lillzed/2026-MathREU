@@ -11,8 +11,9 @@ NUM_CARDS = 43
 
 SAME_COLOUR = {(SPADES, CLUBS), (CLUBS, SPADES), (DIAMONDS, HEARTS), (HEARTS, DIAMONDS)}
 
-_RANK_OF = {}
-_SUIT_OF = {}
+_RANK_OF: dict[int, int] = {}
+_SUIT_OF: dict[int, int] = {}
+
 for _rank in range(5, 15):
     for _suit in SUITS:
         _card = (_rank - 5) * 4 + _suit
@@ -119,7 +120,7 @@ def compare_cards(a: int, b: int, trump: int, joker_suit: int) -> int:
     - trump (int) : the ID of the trump suit
     - joker_suit (int) : the ID of the joker_suit
 
-    Output (int):g
+    Output (int):
     - 0 if 'a' and 'b' are the same
     - 1 if 'a' is superior to 'b'
     - -1 otherwise

@@ -1,23 +1,6 @@
-"""Pure-Python, dependency-free rules engine for this project's 500 variant.
-
-Ports the game logic in 500/server.c and 500/cards.c into a forward
-step()-able state machine (deal -> bid -> kitty/discard -> joker suit ->
-play -> score -> next hand), fast enough for in-process RL training - no
-subprocess, no C server involved. See five_hundred/cards.py for card/trick
-rules and five_hundred/encoding.py for the action-id space this consumes.
-
-Notable rules (see plan / server.c for citations): bidding rotates among
-players who haven't passed yet and ends once all 4 have passed at some
-point (the eventual winner also "passes" to decline further raises); an
-all-pass hand with no bid ever made is silently redealt; the bidder's
-partner sits out play entirely during misere/open misere contracts; the
-joker's suit is chosen by whoever holds it after discarding, only when
-trump is no-trumps.
-"""
-
 import random
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 from . import cards
 from . import encoding as enc
@@ -41,19 +24,32 @@ class StepResult:
     trick_completed: bool = False
     trick_winner: Optional[int] = None
     winning_card: Optional[int] = None
-    hand_summary: Optional[dict] = None
+    hand_summary: Optional[dict[str, Any]] = None
 
 
 class FiveHundredGame:
-    def __init__(self, max_hands=DEFAULT_MAX_HANDS):
+    def __init__(self, max_hands: int =DEFAULT_MAX_HANDS) -> None:
+        """
+        Initialize a 500 game object.
+
+        Input:
+        - max_hands (int) : the maximum number of hands allowed in a game
+
+        Output (None)
+        """
         self.max_hands = max_hands
         self.reset()
 
-    # ------------------------------------------------------------------
-    # setup
-    # ------------------------------------------------------------------
+    def reset(self, seed: int | None =None) -> None:
+        """
+        Reset seed, score, starting player, hand number, done, and truncated variables.
+        Deal a new hand to players.
 
-    def reset(self, seed=None):
+        Input:
+        - seed (int) : the game seed
+
+        Output (None)
+        """
         self._rng = random.Random(seed)
         self.team_scores = [0, 0]
         self.start_player = 0
@@ -62,7 +58,15 @@ class FiveHundredGame:
         self.truncated = False
         self._deal_new_hand()
 
-    def _deal_new_hand(self):
+    def _deal_new_hand(self) -> None:
+        """
+        Deals a hand to all players, including a kitty. Resets all game variables, such as
+        betting information, trick information, card information, etc.
+
+        Input (None)
+
+        Output (None)
+        """
         deck = list(range(cards.NUM_CARDS))
         self._rng.shuffle(deck)
         self.hands = [set(deck[i * 10:(i + 1) * 10]) for i in range(NUM_PLAYERS)]
@@ -94,11 +98,7 @@ class FiveHundredGame:
         self.phase = Phase.BIDDING
         self.current_player = self.start_player
 
-    # ------------------------------------------------------------------
-    # legal actions
-    # ------------------------------------------------------------------
-
-    def legal_actions(self, player=None):
+    def legal_actions(self, player: int  | None =None) -> list[int]:
         if player is None:
             player = self.current_player
         if self.phase == Phase.BIDDING:
@@ -135,10 +135,6 @@ class FiveHundredGame:
         matching = [c for c in hand if cards.effective_suit(c, self.trump, self.joker_suit) == self.lead_suit]
         return matching if matching else list(hand)
 
-    # ------------------------------------------------------------------
-    # step
-    # ------------------------------------------------------------------
-
     def step(self, action):
         if self.phase == Phase.BIDDING:
             return self._step_bid(action)
@@ -172,8 +168,6 @@ class FiveHundredGame:
 
         if self.pass_count == NUM_PLAYERS:
             if self.highest_bet == 0:
-                # everyone passed without a single bid - reshuffle and redeal,
-                # invisible to the episode (server.c: "Everyone passed" -> game_loop again)
                 self._deal_new_hand()
             else:
                 self._begin_discard_phase()
@@ -186,8 +180,6 @@ class FiveHundredGame:
         return StepResult(False, False, None)
 
     def _begin_discard_phase(self):
-        # open misere is ranked using DIAMONDS as a placeholder (see _legal_bids /
-        # server.c bet_round) but always plays as no-trumps
         self.trump = cards.NO_TRUMPS if self.open_misere else self.highest_suit
         self.hands[self.bet_winner] |= set(self.kitty)
         self.phase = Phase.DISCARD
@@ -271,9 +263,6 @@ class FiveHundredGame:
         result.winning_card = winning_card
         return result
 
-    # ------------------------------------------------------------------
-    # scoring
-    # ------------------------------------------------------------------
 
     def _score_hand(self):
         bidder = self.bet_winner
@@ -284,8 +273,6 @@ class FiveHundredGame:
 
         deltas = [0, 0]
         if self.misere:
-            # partner never plays during misere, so their trick count is always 0 -
-            # this check is equivalent to server.c's get_winning_tricks(game) == 0
             success = self.tricks_won[bidder] == 0
             points = OPEN_MISERE_POINTS if self.open_misere else MISERE_POINTS
             deltas[bidder_team] += points if success else -points
@@ -295,9 +282,6 @@ class FiveHundredGame:
             deltas[bidder_team] += points if success else -points
             deltas[other_team] += (TRICKS_PER_HAND - bidding_team_tricks) * 10
 
-        # captured before _deal_new_hand() (below) resets bet_winner/highest_bet/etc
-        # for the next hand, so callers (e.g. render.py) can still describe this
-        # just-finished hand's contract after the engine has already moved on
         hand_summary = {
             "bidder": bidder,
             "highest_bet": self.highest_bet,

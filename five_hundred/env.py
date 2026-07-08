@@ -1,19 +1,3 @@
-"""PettingZoo AECEnv wrapping FiveHundredGame.
-
-Agents are "player_0".."player_3"; seats 0&2 and 1&3 are partners. Each
-agent only ever observes its own hand plus public state (see
-encoding.encode_observation) - kitty/discards stay private to the bidder,
-matching the server, which never broadcasts them; the open-misere bidder's
-hand is the one documented exception, revealed to everyone once play
-starts. Turn order (agent_selection) simply follows whichever seat
-game.current_player says must act next - bidding skips players who've
-already passed, discard stays on the bet winner for 3 calls in a row, and
-misere/open-misere tricks skip the sitting-out partner. Rewards are 0 every
-step except at hand resolution, when each team's real point delta (can be
-negative) is credited to both of that team's agents. One episode is one
-full match to +-500 points, with an optional max_hands truncation safety net.
-"""
-
 import numpy as np
 from gymnasium import spaces
 from pettingzoo import AECEnv
@@ -141,9 +125,6 @@ class FiveHundredEnv(AECEnv):
 
 
 def env(**kwargs):
-    """Standard PettingZoo factory: raw env wrapped with the usual
-    illegal-action/order-enforcing wrappers (same stack pettingzoo.classic
-    uses, e.g. chess_v6)."""
     e = FiveHundredEnv(**kwargs)
     e = wrappers.TerminateIllegalWrapper(e, illegal_reward=-1)
     e = wrappers.AssertOutOfBoundsWrapper(e)

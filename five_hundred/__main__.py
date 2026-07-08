@@ -1,16 +1,3 @@
-"""Smoke test: play one full match with uniformly-random legal actions on
-every seat and report the outcome.
-
-Run with `python -m five_hundred` for a quiet pass/fail check, or
-`python -m five_hundred --render` to print a human-readable play-by-play
-trace of every bid/discard/joker-suit/play decision - useful for eyeballing
-that bidding, follow-suit, trump, and scoring actually match the real rules.
-
-This only exercises the engine/env plumbing (legality, turn order, scoring,
-termination) - it says nothing about play quality, since the actions are
-random.
-"""
-
 import argparse
 import random
 
@@ -49,8 +36,6 @@ def main():
     print(f"\nsteps={steps} hands_played={hands_played} final_scores={scores} "
           f"match_over={not game.truncated} truncated={game.truncated}")
 
-    # a hand's points aren't capped at the threshold, so the final score can
-    # overshoot past +-WIN_POINTS - the invariant is just that it crossed it
     assert game.done
     assert game.truncated or any(abs(s) >= WIN_POINTS for s in scores), scores
 

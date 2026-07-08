@@ -1,11 +1,3 @@
-"""Human-readable trace formatting for FiveHundredEnv(render_mode="human").
-
-For developer sanity-checking only - this is how you eyeball that bidding,
-follow-suit, trump, and scoring actually match the real rules. Real agents
-never see any of this text, only the numeric observation/action_mask from
-encoding.py.
-"""
-
 from . import cards
 from . import encoding as enc
 from .constants import Phase

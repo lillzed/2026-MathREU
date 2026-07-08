@@ -1,6 +1,5 @@
-"""Unified action-id space and observation encoding shared by game.py and env.py.
-
-Action space (Discrete, size ACTION_SPACE_SIZE):
+"""
+Action space
     0..42    card id - used as the action during DISCARD and PLAY phases
     43       PASS       (bid phase only)
     44       MISERE     (bid phase only)
@@ -9,64 +8,105 @@ Action space (Discrete, size ACTION_SPACE_SIZE):
     71..74   joker suit choice: suit in 0..3 (S,C,D,H)      (JOKER_SUIT phase only)
 """
 
+from typing import Iterable, Any
 import numpy as np
+import numpy.typing as npt
 
 from . import cards
 from .constants import NUM_PLAYERS, TRICKS_PER_HAND, Phase
+from .game import FiveHundredGame
 
 PASS_ACTION = cards.NUM_CARDS          # 43
 MISERE_ACTION = PASS_ACTION + 1        # 44
 OPENMISERE_ACTION = PASS_ACTION + 2    # 45
-BID_ACTION_BASE = PASS_ACTION + 3      # 46, 5 values x 5 suits = 25 actions
-JOKER_SUIT_ACTION_BASE = BID_ACTION_BASE + 25  # 71, 4 actions
+BID_ACTION_BASE = PASS_ACTION + 3      # 46
+JOKER_SUIT_ACTION_BASE = BID_ACTION_BASE + 25  # 71
 ACTION_SPACE_SIZE = JOKER_SUIT_ACTION_BASE + 4  # 75
 
 
-def bid_action(value, suit):
+def bid_action(value: int, suit: int) -> int:
+    """
+    Find the ID of a bid.
+
+    Input:
+    - value (int) : the value of the bid
+    - suit (int) : the ID of the suit of the bid
+
+    Output (int):
+    - the ID of the bid
+    """
     return BID_ACTION_BASE + (value - 6) * 5 + suit
 
 
-def decode_bid_action(action):
+def decode_bid_action(action: int) -> tuple[int, int]:
+    """
+    Find the value and suit of a bid.
+
+    Input:
+    - action (int) : the ID of the bid
+
+    Output (tuple[int, int]):
+    - the value of the bid
+    - the ID of the suit of the bid
+    """
     offset = action - BID_ACTION_BASE
     return 6 + offset // 5, offset % 5
 
 
-def joker_suit_action(suit):
+def joker_suit_action(suit: int) -> int:
+    """
+    Find the ID of a joker action.
+
+    Input:
+    - suit (int) : the ID of the joker's suit
+
+    Output (int):
+    - the ID of the action corresponding to playing the joker in the suit
+    """
     return JOKER_SUIT_ACTION_BASE + suit
 
 
-def decode_joker_suit_action(action):
+def decode_joker_suit_action(action: int) -> int:
+    """
+    Find the suit of a joker action.
+
+    Input:
+    - action : the ID of the action
+
+    Output (int):
+    - the ID of the suit in which the joker was played
+    """
     return action - JOKER_SUIT_ACTION_BASE
 
 
-def action_mask(legal_actions):
+def action_mask(legal_actions: Iterable[int]) -> npt.NDArray[np.int8]:
+    """
+    Create a binary mask with 1s at legal action indices.
+
+    Input:
+    - legal_actions (Iterable[int]) : the IDs of legal actions
+
+    Output (npt.NDArray[np.int8]):
+    - a mask, with 0s at indices of illegal actions and 1s at indices of legal actions
+    """
     mask = np.zeros(ACTION_SPACE_SIZE, dtype=np.int8)
     mask[list(legal_actions)] = 1
     return mask
 
-
-# ---------------------------------------------------------------------------
-# Observation encoding - seat-relative: for a viewer at seat `viewer`, relative
-# index r (0..3) always refers to actual seat (viewer + r) % NUM_PLAYERS, so
-# 0 = self, 2 = partner, 1/3 = opponents. Keeps the 4 seats' observations
-# symmetric for self-play.
-# ---------------------------------------------------------------------------
-
 _PHASES = (Phase.BIDDING, Phase.DISCARD, Phase.JOKER_SUIT, Phase.PLAY, Phase.GAME_OVER)
 _PHASE_INDEX = {p: i for i, p in enumerate(_PHASES)}
 
-# block sizes, in the order encode_observation builds them - see below
 _BLOCK_SIZES = [
     cards.NUM_CARDS,       # 1. own hand
-    len(_PHASES),          # 2. phase one-hot
-    6,                     # 3. trump one-hot (S,C,D,H,N,none)
-    5,                     # 4. joker suit one-hot (S,C,D,H,none)
+    len(_PHASES),          # 2. phase
+    6,                     # 3. trump (S,C,D,H,N,none)
+    5,                     # 4. joker suit (S,C,D,H,none)
     1,                     # 5. highest bid value, normalized
-    6,                     # 6. highest bid suit one-hot (S,C,D,H,N,none)
+    6,                     # 6. highest bid suit (S,C,D,H,N,none)
     2,                     # 7. misere / open-misere flags
     NUM_PLAYERS,           # 8. passed[], relative
-    5,                     # 9. current highest bidder, relative one-hot (+none)
-    NUM_PLAYERS,           # 10. dealer/start seat, relative one-hot
+    5,                     # 9. current highest bidder, relative (+none)
+    NUM_PLAYERS,           # 10. dealer/start seat, relative
     *([cards.NUM_CARDS + 1] * NUM_PLAYERS),  # 11. cards on table this trick, per relative seat (+none)
     cards.NUM_CARDS,       # 12. cards seen in earlier tricks this hand
     cards.NUM_CARDS,       # 13. revealed hand (open misere bidder, once play starts)
@@ -75,19 +115,49 @@ _BLOCK_SIZES = [
 OBS_SIZE = sum(_BLOCK_SIZES)
 
 
-def _rel_seat(actual_seat, viewer):
+def _rel_seat(actual_seat: int, viewer: int) -> int:
+    """
+    Find a player's seat relative to a viewer.
+
+    Input:
+    - actual_seat (int) : the ID of the player's actual seat
+    - viewer (int) : the ID of the viewers seat
+
+    Output (int):
+    - the ID of the player's seat relative to the viewer
+    """
     return (actual_seat - viewer) % NUM_PLAYERS
 
 
-def _onehot(index, size):
+def _onehot(index: int | None, size: int) -> npt.NDArray[np.float32]:
+    """
+    Create a mask with one (or zero) true value.
+
+    Input:
+    - index (int) : the index of the true value
+    - size (int) : the length of the mask
+
+    Output (npt.NDArray[np.float32]):
+    - a numpy array of length 'size' with 0s at all indices except 1.0 at the designated index
+    """
     v = np.zeros(size, dtype=np.float32)
     if index is not None:
         v[index] = 1.0
     return v
 
 
-def encode_observation(game, viewer):
-    blocks = []
+def encode_observation(game: FiveHundredGame, viewer: int) -> np.ndarray:
+    """
+    Take a game state and encode into an RL friendly observation.
+
+    Input:
+    - game (FiveHundredGame) : a 500 game
+    - viewer (int) : the ID of the player
+
+    Output (np.ndarray):
+    - a numpy array fully encoding all relevant game data observable by the viewer
+    """
+    blocks: list[Any] = []
 
     # 1. own hand
     own_hand = np.zeros(cards.NUM_CARDS, dtype=np.float32)
@@ -95,19 +165,19 @@ def encode_observation(game, viewer):
         own_hand[c] = 1.0
     blocks.append(own_hand)
 
-    # 2. phase one-hot
+    # 2. phase
     blocks.append(_onehot(_PHASE_INDEX.get(game.phase), len(_PHASES)))
 
-    # 3. trump one-hot (index 5 = not decided yet)
+    # 3. trump
     blocks.append(_onehot(game.trump if game.trump is not None else 5, 6))
 
-    # 4. joker suit one-hot (index 4 = not chosen / not applicable)
+    # 4. joker suit (index 4 = not chosen / not applicable)
     blocks.append(_onehot(game.joker_suit if game.joker_suit is not None else 4, 5))
 
     # 5. highest bid value, normalized
     blocks.append(np.array([game.highest_bet / 10.0], dtype=np.float32))
 
-    # 6. highest bid suit one-hot (index 5 = none yet)
+    # 6. highest bid suit (index 5 = none yet)
     blocks.append(_onehot(game.highest_suit if game.highest_suit is not None else 5, 6))
 
     # 7. misere / open misere flags
@@ -119,11 +189,11 @@ def encode_observation(game, viewer):
         passed_rel[r] = float(game.passed[(viewer + r) % NUM_PLAYERS])
     blocks.append(passed_rel)
 
-    # 9. current highest bidder, relative one-hot (index 4 = no bid yet)
+    # 9. current highest bidder, relative (index 4 = no bid yet)
     bidder_idx = 4 if game.bet_winner is None else _rel_seat(game.bet_winner, viewer)
     blocks.append(_onehot(bidder_idx, 5))
 
-    # 10. dealer/start seat, relative one-hot
+    # 10. dealer/start seat, relative
     blocks.append(_onehot(_rel_seat(game.start_player, viewer), NUM_PLAYERS))
 
     # 11. cards on the table this trick, per relative seat (index NUM_CARDS = none played)
