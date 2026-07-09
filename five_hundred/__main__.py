@@ -5,7 +5,16 @@ from .env import env
 from .constants import WIN_POINTS
 
 
-def main():
+def main() -> None:
+    """
+    Play one match of the 500 RL env end to end, choosing a uniformly random legal
+    action for every agent each step. Serves as a smoke test / usage example for the
+    AECEnv API.
+
+    Input (None)
+
+    Output (None)
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--render", action="store_true", help="print a play-by-play trace")
     parser.add_argument("--seed", type=int, default=0)

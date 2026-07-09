@@ -20,11 +20,11 @@ class Phase(Enum):
 
 def bid_points(value: int, suit: int) -> int:
     """
-    Calculate the point value of a bid.
+    Calculate the point value of a standard bid.
 
     Input:
-    value (int) : the value of the bid
-    suit (int) : the ID of the suit of the bid
+    - value (int) : the value of the bid
+    - suit (int) : the ID of the suit of the bid
 
     Output (int):
     - the point value of the bid

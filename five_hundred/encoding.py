@@ -8,13 +8,21 @@ Action space
     71..74   joker suit choice: suit in 0..3 (S,C,D,H)      (JOKER_SUIT phase only)
 """
 
-from typing import Iterable, Any
+from __future__ import annotations
+
+from typing import Iterable, Any, TYPE_CHECKING
 import numpy as np
 import numpy.typing as npt
 
 from . import cards
 from .constants import NUM_PLAYERS, TRICKS_PER_HAND, Phase
-from .game import FiveHundredGame
+
+if TYPE_CHECKING:
+    # game.py imports this module at load time, so importing FiveHundredGame here
+    # (only needed for the encode_observation type hint) would be circular. The
+    # `from __future__ import annotations` above keeps the hint unevaluated at
+    # runtime, so this import only ever runs for type checkers.
+    from .game import FiveHundredGame
 
 PASS_ACTION = cards.NUM_CARDS          # 43
 MISERE_ACTION = PASS_ACTION + 1        # 44
@@ -148,7 +156,20 @@ def _onehot(index: int | None, size: int) -> npt.NDArray[np.float32]:
 
 def encode_observation(game: FiveHundredGame, viewer: int) -> np.ndarray:
     """
-    Take a game state and encode into an RL friendly observation.
+    Take a game state and encode into an RL friendly observation. More specifically, concatentates...
+        1. The IDs of the cards curently in the viewers hand
+        2. The ID of the current game phase
+        3. The ID of the trump suit
+        4. The ID of the joker's suit
+        5. The highest bid value, normalized from 0.6 to 1.0
+        6. The ID of the suit of the highest bid
+        7. Whether the current game is misere or open misere
+        8. Which players have passed, relative to the viewer
+        9. Which players are the highest bidder, relative to the viewer
+        10. The starting seat relative to the viewer
+        11. The cards on the table this trick
+        12. The cards seen earlier this hand
+        13. The revealed hand of an open misere player
 
     Input:
     - game (FiveHundredGame) : a 500 game

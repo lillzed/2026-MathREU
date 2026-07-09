@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 from gymnasium import spaces
 from pettingzoo import AECEnv
@@ -12,7 +14,17 @@ from .game import FiveHundredGame
 class FiveHundredEnv(AECEnv):
     metadata = {"render_modes": ["human"], "name": "five_hundred_v0", "is_parallelizable": False}
 
-    def __init__(self, render_mode=None, max_hands=DEFAULT_MAX_HANDS):
+    def __init__(self, render_mode: str | None = None, max_hands: int = DEFAULT_MAX_HANDS) -> None:
+        """
+        Initialize a PettingZoo AECEnv wrapping a 500 game.
+
+        Input:
+        - render_mode (str | None) : "human" to print a play-by-play trace on reset()/step(),
+          or None for no output
+        - max_hands (int) : the maximum number of hands allowed before the match is truncated
+
+        Output (None)
+        """
         super().__init__()
         self.render_mode = render_mode
 
@@ -38,13 +50,41 @@ class FiveHundredEnv(AECEnv):
         self.infos = {}
         self.agent_selection = None
 
-    def observation_space(self, agent):
+    def observation_space(self, agent: str) -> spaces.Dict:
+        """
+        Get the observation space for an agent.
+
+        Input:
+        - agent (str) : the agent's name, e.g. "player_0"
+
+        Output (spaces.Dict):
+        - the Dict space describing that agent's "observation" and "action_mask"
+        """
         return self._observation_spaces[agent]
 
-    def action_space(self, agent):
+    def action_space(self, agent: str) -> spaces.Discrete:
+        """
+        Get the action space for an agent.
+
+        Input:
+        - agent (str) : the agent's name, e.g. "player_0"
+
+        Output (spaces.Discrete):
+        - the Discrete action space shared by all agents
+        """
         return self._action_spaces[agent]
 
-    def observe(self, agent):
+    def observe(self, agent: str) -> dict[str, np.ndarray]:
+        """
+        Build the current observation for an agent.
+
+        Input:
+        - agent (str) : the agent's name, e.g. "player_0"
+
+        Output (dict[str, np.ndarray]):
+        - "observation" : the encoded game state, from that agent's point of view
+        - "action_mask" : legal-action mask, all zeros unless it's this agent's turn
+        """
         seat = self.agent_name_mapping[agent]
         observation = enc.encode_observation(self._game, seat)
         if seat == self._game.current_player and not self._game.done:
@@ -53,7 +93,17 @@ class FiveHundredEnv(AECEnv):
             mask = np.zeros(enc.ACTION_SPACE_SIZE, dtype=np.int8)
         return {"observation": observation, "action_mask": mask}
 
-    def reset(self, seed=None, options=None):
+    def reset(self, seed: int | None = None, options: dict | None = None) -> None:
+        """
+        Reset the underlying game and PettingZoo bookkeeping (agents, rewards,
+        terminations/truncations, infos) for a new match.
+
+        Input:
+        - seed (int | None) : the game seed
+        - options (dict | None) : unused, present for AECEnv API compatibility
+
+        Output (None)
+        """
         self._game.reset(seed=seed)
         self.agents = self.possible_agents[:]
         self.rewards = {a: 0 for a in self.agents}
@@ -67,7 +117,17 @@ class FiveHundredEnv(AECEnv):
         if self.render_mode == "human":
             self.render()
 
-    def step(self, action):
+    def step(self, action: int | None) -> None:
+        """
+        Apply an action for the currently-selected agent, advance the underlying game,
+        update rewards/terminations/truncations, and select the next agent.
+
+        Input:
+        - action (int | None) : the ID of the action to apply, or None if the current
+          agent is already terminated/truncated (dead-step)
+
+        Output (None)
+        """
         agent = self.agent_selection
         if self.terminations[agent] or self.truncations[agent]:
             self._was_dead_step(action)
@@ -114,17 +174,42 @@ class FiveHundredEnv(AECEnv):
         if self.render_mode == "human":
             self.render()
 
-    def render(self):
+    def render(self) -> None:
+        """
+        Print the play-by-play trace lines produced by the most recent reset()/step()
+        call. No-op unless render_mode is "human".
+
+        Input (None)
+
+        Output (None)
+        """
         if self.render_mode != "human":
             return
         for line in self._trace_lines:
             print(line)
 
-    def close(self):
+    def close(self) -> None:
+        """
+        Release any resources held by the environment. No resources to release here.
+
+        Input (None)
+
+        Output (None)
+        """
         pass
 
 
-def env(**kwargs):
+def env(**kwargs: Any) -> AECEnv:
+    """
+    Build a fully-wrapped 500 AECEnv, ready for use with PettingZoo-compatible agents.
+
+    Input:
+    - **kwargs (Any) : forwarded to FiveHundredEnv.__init__ (e.g. render_mode, max_hands)
+
+    Output (AECEnv):
+    - a FiveHundredEnv wrapped with PettingZoo's TerminateIllegalWrapper,
+      AssertOutOfBoundsWrapper, and OrderEnforcingWrapper
+    """
     e = FiveHundredEnv(**kwargs)
     e = wrappers.TerminateIllegalWrapper(e, illegal_reward=-1)
     e = wrappers.AssertOutOfBoundsWrapper(e)
