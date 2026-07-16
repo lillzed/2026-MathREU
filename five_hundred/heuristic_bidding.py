@@ -1,12 +1,7 @@
-import sys
-from pathlib import Path
 import random
 
-repo_root = Path(__file__).resolve().parents[2]
-sys.path.append(str(repo_root))
-
-from five_hundred.encoding import bid_action, decode_bid_action
-from five_hundred.cards import (
+from .encoding import bid_action, decode_bid_action
+from .cards import (
     rank_of, suit_of, format_card, effective_card,
     QUEEN, KING, ACE, LEFT_BOWER, RIGHT_BOWER, JOKER_VALUE,
 )
@@ -154,15 +149,16 @@ def make_bid(cards: list[int]) -> tuple[str, int]:
     return (SUIT_KEY[best], round(scores[best]))
 
 
-# testing
-for _ in range(500):
-    hand = random.sample(range(0, 43), 10)
-    hand_str = [format_card(card) for card in hand]
+if __name__ == "__main__":
+    for _ in range(500):
+        hand = random.sample(range(0, 43), 10)
+        hand_str = [format_card(card) for card in hand]
 
-    suit, value = make_bid(hand)
+        suit, value = make_bid(hand)
 
-    result = f"Hand: {', '.join(hand_str)}"
-    result += "\nPASS" if value < 6 else f"\nBid: {value}, {suit}"
-    result += "\n---------------------------------------------"
+        result = f"Hand: {', '.join(hand_str)}"
+        result += "\nPASS" if value < 6 else f"\nBid: {value}, {suit}"
+        result += "\n---------------------------------------------"
 
-    if value == 10: print(result)
+        if suit == "SPADE":
+            print(result)
