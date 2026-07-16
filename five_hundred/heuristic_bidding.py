@@ -1,8 +1,7 @@
 import random
 
-from .encoding import bid_action, decode_bid_action
 from .cards import (
-    rank_of, suit_of, format_card, effective_card,
+    effective_card,
     QUEEN, KING, ACE, LEFT_BOWER, RIGHT_BOWER, JOKER_VALUE,
 )
 
@@ -127,7 +126,7 @@ def _misere_score(cards: list[int]) -> float:
     return safety * 0.5                              # too risky to compete with a real bid
 
 
-def make_bid(cards: list[int]) -> tuple[str, int]:
+def make_bid(cards: list[int]) -> tuple[int, int]:
     """
     Based on a list of cards, make a bid.
 
@@ -146,19 +145,33 @@ def make_bid(cards: list[int]) -> tuple[str, int]:
     scores[MISERE] = _misere_score(cards)
 
     best = scores.index(max(scores))
-    return (SUIT_KEY[best], round(scores[best]))
+    return (best, round(scores[best]))
 
 
-if __name__ == "__main__":
-    for _ in range(500):
-        hand = random.sample(range(0, 43), 10)
-        hand_str = [format_card(card) for card in hand]
+#___________________Kitty Heuristic_________________#
 
-        suit, value = make_bid(hand)
+def _discard_kitty_suit(cards: list[int], trump: int) -> tuple[int, int, int]:
+    """
+    Starting with the list of cards, removes trumps, then aces, then protected kings,
+    while checking that the number of candidate cards is greater than or equal to 3. Then, short
+    suits whatever suit has cards with the lowest sum.
+    """
+    
+    effective_cards = [effective_card(card, trump, trump) for card in cards]
+    
+    candidates = [card for card in effective_cards if card[1] != trump else 0]
+    if len(candidates) < 3:
 
-        result = f"Hand: {', '.join(hand_str)}"
-        result += "\nPASS" if value < 6 else f"\nBid: {value}, {suit}"
-        result += "\n---------------------------------------------"
+     
 
-        if suit == "SPADE":
-            print(result)
+
+
+
+def _discard_kitty_misere(cards: list[int], bid: int) -> tuple[int, int, int]:
+    raise NotImplementedError
+
+def _discard_kitt_nt(cards: list[int], bid: int) -> tuple[int, int, int]:
+    raise NotImplementedError
+
+def discard_kitty(cards: list[int], bid: int) -> tuple[int, int, int]:
+    raise NotImplementedError

@@ -111,14 +111,15 @@ _BLOCK_SIZES = [
     5,                     # 4. joker suit (S,C,D,H,none)
     1,                     # 5. highest bid value, normalized
     6,                     # 6. highest bid suit (S,C,D,H,N,none)
-    2,                     # 7. misere / open-misere flags
-    NUM_PLAYERS,           # 8. passed[], relative
-    5,                     # 9. current highest bidder, relative (+none)
-    NUM_PLAYERS,           # 10. dealer/start seat, relative
-    *([cards.NUM_CARDS + 1] * NUM_PLAYERS),  # 11. cards on table this trick, per relative seat (+none)
-    cards.NUM_CARDS,       # 12. cards seen in earlier tricks this hand
-    cards.NUM_CARDS,       # 13. revealed hand (open misere bidder, once play starts)
-    2,                     # 14. own/opponent team tricks won this hand, normalized
+    NUM_PLAYERS            # 7. highest bid per player
+    2,                     # 8. misere / open-misere flags
+    NUM_PLAYERS,           # 9. passed[], relative
+    5,                     # 10. current highest bidder, relative (+none)
+    NUM_PLAYERS,           # 11. dealer/start seat, relative
+    *([cards.NUM_CARDS + 1] * NUM_PLAYERS),  # 12. cards on table this trick, per relative seat (+none)
+    cards.NUM_CARDS,       # 13. cards seen in earlier tricks this hand
+    cards.NUM_CARDS,       # 14. revealed hand (open misere bidder, once play starts)
+    2,                     # 15. own/opponent team tricks won this hand, normalized
 ]
 OBS_SIZE = sum(_BLOCK_SIZES)
 
@@ -163,16 +164,17 @@ def encode_observation(game: FiveHundredGame, viewer: int) -> np.ndarray:
         4. The ID of the joker's suit
         5. The highest bid value, normalized from 0.6 to 1.0
         6. The ID of the suit of the highest bid
-        7. Whether the current game is misere or open misere
-        8. Which players have passed, relative to the viewer
-        9. Which players are the highest bidder, relative to the viewer
-        10. The starting seat relative to the viewer
-        11. The cards on the table this trick
-        12. The cards seen earlier this hand
-        13. The revealed hand of an open misere player
+        7. The IDs of the highest bid action per player, relative to the viewer
+        8. Whether the current game is misere or open misere
+        9. Which players have passed, relative to the viewer
+        10. Which players are the highest bidder, relative to the viewer
+        11. The starting seat relative to the viewer
+        12. The cards on the table this trick
+        13. The cards seen earlier this hand
+        14. The revealed hand of an open misere player
 
     Input:
-    - game (FiveHundredGame) : a 500 game
+    - game (FiveHundredGame) : a 500 game 
     - viewer (int) : the ID of the player
 
     Output (np.ndarray):
@@ -201,23 +203,26 @@ def encode_observation(game: FiveHundredGame, viewer: int) -> np.ndarray:
     # 6. highest bid suit (index 5 = none yet)
     blocks.append(_onehot(game.highest_suit if game.highest_suit is not None else 5, 6))
 
-    # 7. misere / open misere flags
+    # 7. high bid value per player, relative
+    blocks.append()
+    
+    # 8. misere / open misere flags
     blocks.append(np.array([float(game.misere), float(game.open_misere)], dtype=np.float32))
 
-    # 8. passed[], relative
+    # 9. passed[], relative
     passed_rel = np.zeros(NUM_PLAYERS, dtype=np.float32)
     for r in range(NUM_PLAYERS):
         passed_rel[r] = float(game.passed[(viewer + r) % NUM_PLAYERS])
     blocks.append(passed_rel)
 
-    # 9. current highest bidder, relative (index 4 = no bid yet)
+    # 10. current highest bidder, relative (index 4 = no bid yet)
     bidder_idx = 4 if game.bet_winner is None else _rel_seat(game.bet_winner, viewer)
     blocks.append(_onehot(bidder_idx, 5))
 
-    # 10. dealer/start seat, relative
+    # 11. dealer/start seat, relative
     blocks.append(_onehot(_rel_seat(game.start_player, viewer), NUM_PLAYERS))
 
-    # 11. cards on the table this trick, per relative seat (index NUM_CARDS = none played)
+    # 12. cards on the table this trick, per relative seat (index NUM_CARDS = none played)
     table = dict(game.current_trick)
     for r in range(NUM_PLAYERS):
         actual = (viewer + r) % NUM_PLAYERS
@@ -226,20 +231,20 @@ def encode_observation(game: FiveHundredGame, viewer: int) -> np.ndarray:
         slot[card if card is not None else cards.NUM_CARDS] = 1.0
         blocks.append(slot)
 
-    # 12. cards seen in earlier tricks this hand
+    # 13. cards seen in earlier tricks this hand
     seen = np.zeros(cards.NUM_CARDS, dtype=np.float32)
     for c in game.seen_cards:
         seen[c] = 1.0
     blocks.append(seen)
 
-    # 13. revealed hand: the open-misere bidder's hand is public once play starts
+    # 14. revealed hand: the open-misere bidder's hand is public once play starts
     revealed = np.zeros(cards.NUM_CARDS, dtype=np.float32)
     if game.open_misere and game.phase == Phase.PLAY and game.bet_winner is not None:
         for c in game.hands[game.bet_winner]:
             revealed[c] = 1.0
     blocks.append(revealed)
 
-    # 14. own/opponent team tricks won this hand, normalized
+    # 15. own/opponent team tricks won this hand, normalized
     own_team = viewer % 2
     own_tricks = sum(game.tricks_won[s] for s in range(NUM_PLAYERS) if s % 2 == own_team)
     opp_tricks = sum(game.tricks_won[s] for s in range(NUM_PLAYERS) if s % 2 != own_team)
