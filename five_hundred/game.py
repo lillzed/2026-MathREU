@@ -69,13 +69,13 @@ class FiveHundredGame:
 
         Output (None)
         """
-        deck = list(range(cards.NUM_CARDS))
+        deck = list(range(cards.CARD_START_INDEX, cards.JOKER_INDEX + 1))
         self._rng.shuffle(deck)
         self.hands = [set(deck[i * 10:(i + 1) * 10]) for i in range(NUM_PLAYERS)]
         self.kitty = deck[40:43]
         self.discards = []
 
-        self.bid_history = [None] * NUM_PLAYERS
+        self.bid_history = [(0, cards.NO_SUIT)] * NUM_PLAYERS
         self.bet_winner = None
         self.highest_bet = 0
         self.highest_suit = None
@@ -85,10 +85,9 @@ class FiveHundredGame:
         self.pass_count = 0
 
         self.trump = None
-        self.joker_suit = None
 
         self.tricks_won = [0] * NUM_PLAYERS
-        self.seen_cards = set()
+        self.card_history: dict[int, tuple[int, int]] = {}
         self.current_trick = []
         self.trick_order = []
         self.trick_play_idx = 0
@@ -117,8 +116,6 @@ class FiveHundredGame:
             return self._legal_bids()
         if self.phase == Phase.DISCARD:
             return list(self.hands[player])
-        if self.phase == Phase.JOKER_SUIT:
-            return [enc.joker_suit_action(s) for s in cards.SUITS]
         if self.phase == Phase.PLAY:
             return self._legal_plays(player)
         return []
@@ -132,7 +129,7 @@ class FiveHundredGame:
         Output (list[int]):
         - the list of IDs of legal bids
         """
-        actions = [enc.PASS_ACTION]
+        actions = [enc.bid_action()]
         hb = self.highest_bet
         hs = self.highest_suit if self.highest_suit is not None else -1
 
@@ -142,9 +139,9 @@ class FiveHundredGame:
                     actions.append(enc.bid_action(value, suit))
 
         if hb == 7 and not self.misere:
-            actions.append(enc.MISERE_ACTION)
+            actions.append(enc.bid_action(7, misere=True))
         if (hb < 10 or (hb == 10 and hs <= cards.DIAMONDS)) and not self.open_misere:
-            actions.append(enc.OPENMISERE_ACTION)
+            actions.append(enc.bid_action(10, misere=True))
 
         return actions
 
@@ -153,6 +150,7 @@ class FiveHundredGame:
         Helper function for legal_actions(). Create a list of legal plays.
 
         Input:
+        
         - player (int) : the ID of the player
 
         Output (list[int]):
@@ -161,15 +159,15 @@ class FiveHundredGame:
         hand = self.hands[player]
         if self.lead_suit is None:
             return list(hand)
-        matching = [c for c in hand if cards.effective_suit(c, self.trump, self.joker_suit) == self.lead_suit]
+        matching = [c for c in hand if cards.effective_suit(c, self.trump) == self.lead_suit]
         return matching if matching else list(hand)
 
     def step(self, action: int) -> StepResult:
         """
         Apply an action for the current player and advance the game by one decision,
-        dispatching to the appropriate phase-specific handler (bid, discard, joker suit
-        choice, or card play) based on the current phase. The action must be one of the
-        IDs returned by legal_actions() for the current player.
+        dispatching to the appropriate phase-specific handler (bid, discard, or card
+        play) based on the current phase. The action must be one of the IDs returned
+        by legal_actions() for the current player.
 
         Input:
         - action (int) : the ID of the action to apply
@@ -182,8 +180,6 @@ class FiveHundredGame:
             return self._step_bid(action)
         if self.phase == Phase.DISCARD:
             return self._step_discard(action)
-        if self.phase == Phase.JOKER_SUIT:
-            return self._step_joker(action)
         if self.phase == Phase.PLAY:
             return self._step_play(action)
         raise RuntimeError(f"step() called while game is in terminal phase {self.phase}")
@@ -199,26 +195,26 @@ class FiveHundredGame:
         - a step result object
         """
         player = self.current_player
+        value, suit, misere = enc.decode_bid_action(action)
 
-        if action == enc.PASS_ACTION:
+        if value == 0:
             self.passed[player] = True
             self.pass_count += 1
-        elif action == enc.MISERE_ACTION:
-            self.highest_bet, self.highest_suit = 7, cards.NO_TRUMPS
-            self.misere = True
-            self.bet_winner = player
-        elif action == enc.OPENMISERE_ACTION:
-            self.highest_bet, self.highest_suit = 10, cards.DIAMONDS
-            self.misere, self.open_misere = True, True
+        elif misere:
+            if value == 7:
+                self.highest_bet, self.highest_suit = 7, cards.NO_SUIT
+                self.misere = True
+            else:
+                self.highest_bet, self.highest_suit = 10, cards.DIAMONDS
+                self.misere, self.open_misere = True, True
             self.bet_winner = player
         else:
-            value, suit = enc.decode_bid_action(action)
             self.highest_bet, self.highest_suit = value, suit
             self.misere, self.open_misere = False, False
             self.bet_winner = player
-        
-        if self.bid_history[player] is None or action is not enc.PASS_ACTION:
-            self.bid_history[player] = action
+
+        if value != 0 or self.bid_history[player][0] == 0:
+            self.bid_history[player] = (value, suit)
 
         if self.pass_count == NUM_PLAYERS:
             if self.highest_bet == 0:
@@ -242,7 +238,7 @@ class FiveHundredGame:
 
         Output (None)
         """
-        self.trump = cards.NO_TRUMPS if self.open_misere else self.highest_suit
+        self.trump = cards.NO_SUIT if self.open_misere else self.highest_suit
         self.hands[self.bet_winner] |= set(self.kitty)
         self.phase = Phase.DISCARD
         self.current_player = self.bet_winner
@@ -262,37 +258,7 @@ class FiveHundredGame:
         self.hands[player].remove(action)
         self.discards.append(action)
         if len(self.discards) == 3:
-            self._begin_joker_or_play_phase()
-        return StepResult(False, False, None)
-
-    def _begin_joker_or_play_phase(self) -> None:
-        """
-        Helper function to step(). Assigns the joker to a suit as neccesary.
-
-        Input (None)
-
-        Output (None)
-        """
-        if self.trump == cards.NO_TRUMPS:
-            holder = next((s for s in range(NUM_PLAYERS) if cards.JOKER in self.hands[s]), None)
-            if holder is not None:
-                self.phase = Phase.JOKER_SUIT
-                self.current_player = holder
-                return
-        self._begin_play_phase()
-
-    def _step_joker(self, action: int) -> StepResult:
-        """
-        Helper function for step(). Step the joker action.
-
-        Input:
-        - action (int) : the ID of the action
-
-        Output (StepResult):
-        - a step result object
-        """
-        self.joker_suit = enc.decode_joker_suit_action(action)
-        self._begin_play_phase()
+            self._begin_play_phase()
         return StepResult(False, False, None)
 
     def _begin_play_phase(self) -> None:
@@ -341,13 +307,13 @@ class FiveHundredGame:
         card = action
         self.hands[player].remove(card)
         self.current_trick.append((player, card))
-        self.seen_cards.add(card)
+        self.card_history[card] = (player, self.tricks_played)
 
         if len(self.current_trick) == 1:
-            self.lead_suit = cards.effective_suit(card, self.trump, self.joker_suit)
+            self.lead_suit = cards.effective_suit(card, self.trump)
             self.trick_winner = player
             self.winning_card = card
-        elif cards.compare_cards(card, self.winning_card, self.trump, self.joker_suit) == 1:
+        elif cards.compare_cards(card, self.winning_card, self.trump, self.lead_suit) == 1:
             self.winning_card = card
             self.trick_winner = player
 

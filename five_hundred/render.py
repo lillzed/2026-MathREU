@@ -3,6 +3,13 @@ from . import encoding as enc
 from .constants import Phase
 from .game import FiveHundredGame, StepResult
 
+# cards.STRING_DICT covers the four real suits plus face ranks (for format_card),
+# but bids can also be NO_SUIT ("no trumps"), which isn't a printable card suit.
+_SUIT_CHARS = {
+    cards.SPADES: "S", cards.CLUBS: "C", cards.DIAMONDS: "D",
+    cards.HEARTS: "H", cards.NO_SUIT: "N",
+}
+
 
 def _bid_description(action: int) -> str:
     """
@@ -14,14 +21,12 @@ def _bid_description(action: int) -> str:
     Output (str):
     - a description of the bid, e.g. "passed" or "bid 8H"
     """
-    if action == enc.PASS_ACTION:
+    value, suit, misere = enc.decode_bid_action(action)
+    if value == 0:
         return "passed"
-    if action == enc.MISERE_ACTION:
-        return "bid MISERE"
-    if action == enc.OPENMISERE_ACTION:
-        return "bid OPEN MISERE"
-    value, suit = enc.decode_bid_action(action)
-    return f"bid {value}{cards.SUIT_CHARS[suit]}"
+    if misere:
+        return "bid OPEN MISERE" if value == 10 else "bid MISERE"
+    return f"bid {value}{_SUIT_CHARS[suit]}"
 
 
 def describe_action(phase_before: Phase, seat: int, action: int) -> str:
@@ -42,9 +47,6 @@ def describe_action(phase_before: Phase, seat: int, action: int) -> str:
         return f"Player {seat} {_bid_description(action)}"
     if phase_before == Phase.DISCARD:
         return f"Player {seat} discarded {cards.format_card(action)}"
-    if phase_before == Phase.JOKER_SUIT:
-        suit = enc.decode_joker_suit_action(action)
-        return f"Player {seat} chose {cards.SUIT_CHARS[suit]} as the joker's suit"
     if phase_before == Phase.PLAY:
         return f"Player {seat} played {cards.format_card(action)}"
     return f"Player {seat} took action {action}"
@@ -100,7 +102,7 @@ def _contract_description(summary: dict) -> str:
     """
     if summary["misere"]:
         return "OPEN MISERE" if summary["open_misere"] else "MISERE"
-    return f"{summary['highest_bet']}{cards.SUIT_CHARS[summary['highest_suit']]}"
+    return f"{summary['highest_bet']}{_SUIT_CHARS[summary['highest_suit']]}"
 
 
 def describe_hand_result(result: StepResult, game: FiveHundredGame) -> str:

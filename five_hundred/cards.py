@@ -1,138 +1,84 @@
-SPADES, CLUBS, DIAMONDS, HEARTS, NO_TRUMPS = 0, 1, 2, 3, 4
-SUITS = (SPADES, CLUBS, DIAMONDS, HEARTS)
-SUIT_CHARS = {SPADES: "S", CLUBS: "C", DIAMONDS: "D", HEARTS: "H", NO_TRUMPS: "N"}
-CHAR_TO_SUIT = {c: s for s, c in SUIT_CHARS.items()}
+SPADES, CLUBS, DIAMONDS, HEARTS, NO_SUIT = 0, 1, 2, 3, 4
+COLOR_DICT = {SPADES: CLUBS, CLUBS: SPADES, DIAMONDS: HEARTS, HEARTS: DIAMONDS}
 
-JACK, QUEEN, KING, ACE = 11, 12, 13, 14
-LEFT_BOWER, RIGHT_BOWER, JOKER_VALUE = 15, 16, 17
-
-JOKER = 42
+CARD_START_INDEX = 0
+JOKER_INDEX = 42
+JACK, QUEEN, KING, ACE, JOKER = 11, 12, 13, 14, 15
 NUM_CARDS = 43
 
-SAME_COLOUR = {(SPADES, CLUBS), (CLUBS, SPADES), (DIAMONDS, HEARTS), (HEARTS, DIAMONDS)}
+ID_CARD = {CARD_START_INDEX: (4, DIAMONDS), CARD_START_INDEX + 1: (4, HEARTS)}
+for i in range (CARD_START_INDEX + 2, CARD_START_INDEX + NUM_CARDS):
+    ID_CARD[i] = (((18 + (i - CARD_START_INDEX)) // 4), i % 4)
+ID_CARD[JOKER_INDEX] = (15, NO_SUIT)
+CARD_ID = {c: i for i, c in ID_CARD.items()}
 
-_RANK_OF: dict[int, int] = {}
-_SUIT_OF: dict[int, int] = {}
-
-for _rank in range(5, 15):
-    for _suit in SUITS:
-        _card = (_rank - 5) * 4 + _suit
-        _RANK_OF[_card] = _rank
-        _SUIT_OF[_card] = _suit
-_RANK_OF[40], _SUIT_OF[40] = 4, DIAMONDS
-_RANK_OF[41], _SUIT_OF[41] = 4, HEARTS
-_RANK_OF[JOKER], _SUIT_OF[JOKER] = JOKER_VALUE, NO_TRUMPS
-
-_RANK_CHARS = {JACK: "J", QUEEN: "Q", KING: "K", ACE: "A"}
-
+STRING_DICT = {SPADES: "S", CLUBS: "C", DIAMONDS: "D", HEARTS: "H",
+               JACK: "J", QUEEN: "Q", KING: "K", ACE: "A"}
 
 def rank_of(card: int) -> int:
-    """
-    Find the rank of a card.
-
-    Input:
-    - card (int) : the ID of the card
-
-    Output (int):
-    - the rank of the card
-    """
-    return _RANK_OF[card]
+    """Returns the rank of a card (4 - 15) given the cards ID."""
+    return ID_CARD[card][0]
 
 
 def suit_of(card: int) -> int:
-    """
-    Find the suit of a card.
+    """Returns the ID of the suit of a card (0 - 4) given the cards ID."""
+    return ID_CARD[card][1]
 
-    Input:
-    - card (int) : the ID of the card
 
-    Output (int):
-    - the ID of the suit of the card
-    """
-    return _SUIT_OF[card]
+def id_card(rank: int, suit: int) -> int:
+    """Returns the ID of a card given the cards rank and suit."""
+    return CARD_ID[(rank, suit)]
 
 
 def format_card(card: int) -> str:
-    """
-    Create a string representation of a card.
-
-    Input:
-    - card (int) : the ID of the card
-
-    Output (str):
-    - a string representation of the card in the form "{rank}{suit}"
-    """
-    if card == JOKER:
+    """Formats a card into a string representation given the cards ID."""
+    if card == JOKER_INDEX:
         return "JOKER"
-    rank, suit = _RANK_OF[card], _SUIT_OF[card]
-    return f"{_RANK_CHARS.get(rank, str(rank))}{SUIT_CHARS[suit]}"
+    
+    suit = STRING_DICT[suit_of(card)]
+    
+    rank = rank_of(card)
+    if rank >= JACK:
+        rank = STRING_DICT[rank]
+    
+    return str(rank) + suit
 
 
-def effective_card(card: int, trump: int, joker_suit: int) -> tuple[int, int]:
+def effective_card(card: int, trump: int) -> tuple[int, int]:
     """
-    Find the effective rank and suit of a card.
-
-    Input:
-    - card (int) : the ID of the card
-    - trump (int) : the ID of the trump suit
-    - joker_suit (int) : the ID of the joker's suit
-
-    Output (tuple[int, int]):
-    - an effective rank of the card relative to other cards in the effective suit
-    - the ID of the effective suit of the card
+    Returns (order, suit), where 'order' is a number strictly used for comparison
+    within the same suit and 'suit' is the effective suit of a card.
     """
-    if card == JOKER:
-        suit = joker_suit if trump == NO_TRUMPS else trump
-        return JOKER_VALUE, suit
+    rank = rank_of(card)
+    suit = suit_of(card)
 
-    value, suit = _RANK_OF[card], _SUIT_OF[card]
-    if value != JACK:
-        return value, suit
-    if suit == trump:
-        return RIGHT_BOWER, trump
-    if (suit, trump) in SAME_COLOUR:
-        return LEFT_BOWER, trump
-    return value, suit
+    if rank == JACK and suit == trump:
+        return (JOKER_INDEX + 2, trump)
+    elif rank == JACK and trump != NO_SUIT and suit == COLOR_DICT[trump]:
+        return (JOKER_INDEX + 1, trump)
+    elif rank == JOKER:
+        return (JOKER_INDEX + 3, trump)
+    
+    return (rank, suit)
 
 
-def effective_suit(card: int, trump: int, joker_suit: int) -> int:
+def effective_suit(card: int, trump: int) -> int:
+    """Returns the effective suit of a card given the ID of the card and the trump suit."""
+    return effective_card(card, trump)[1]
+
+
+def compare_cards(card1: int, card2: int, trump: int, lead: int = NO_SUIT) -> int:
     """
-    Find the effective suit of a card.
-
-    Input:
-    - card (int) : the ID of the card
-    - trump (int) : the ID of the trump suit
-    - joker_suit (int) : the ID of the joker's suit
-
-    Output:
-    - the ID of the effective suit of the card
+    Returns 1 if card1 beats card2, -1 if card2 beats card1, and 0 if more info is needed,
+    given the IDs of both cards, the trump suit, and optionally the card led.
     """
-    return effective_card(card, trump, joker_suit)[1]
+    rank1, suit1 = effective_card(card1, trump)
+    rank2, suit2 = effective_card(card2, trump)
 
-
-def compare_cards(a: int, b: int, trump: int, joker_suit: int) -> int:
-    """
-    Compute which of two cards is superior.
-
-    Input:
-    - a (int) : the ID of a card
-    - b (int) : the ID of a card
-    - trump (int) : the ID of the trump suit
-    - joker_suit (int) : the ID of the joker_suit
-
-    Output (int):
-    - 0 if 'a' and 'b' are the same
-    - 1 if 'a' is superior to 'b'
-    - -1 otherwise
-    """
-    if a == b:
-        return 0
-    va, sa = effective_card(a, trump, joker_suit)
-    vb, sb = effective_card(b, trump, joker_suit)
-    if sa == trump and sb != trump:
-        return 1
-    if sb == trump and sa != trump:
-        return -1
-    if sa == sb:
-        return 1 if va > vb else -1
-    return -1
+    if suit1 == suit2:
+        return 1 if rank1 > rank2 else -1
+    elif suit1 == trump or suit2 == trump:
+        return 1 if suit1 == trump else -1
+    elif suit1 == lead or suit2 == lead:
+        return 1 if suit1 == lead else -1
+    return 0
