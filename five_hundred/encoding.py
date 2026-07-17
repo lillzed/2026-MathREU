@@ -137,8 +137,6 @@ def encode_observation(game: "FiveHundredGame", viewer: int) -> np.ndarray:
     blocks.append(bid_rank)
 
     # 5. highest bid suit per player, relative (index 5 = hasn't bid yet)
-    # NO_SUIT (4) is itself a legal bid suit ("no trumps"), so "hasn't bid" has to be
-    # its own sentinel index rather than reusing NO_SUIT's slot.
     for r in range(NUM_PLAYERS):
         actual = (viewer - r) % NUM_PLAYERS
         value, suit = game.bid_history[actual]
