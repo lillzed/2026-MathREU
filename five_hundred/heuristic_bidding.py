@@ -2,7 +2,7 @@ import random
 
 from .cards import (
     effective_card,
-    QUEEN, KING, ACE, LEFT_BOWER, RIGHT_BOWER, JOKER_VALUE,
+    QUEEN, KING, ACE, JOKER_INDEX,
 )
 
 SPADE = 0
@@ -14,10 +14,12 @@ MISERE = 5
 SUIT_KEY = {0: "SPADE", 1: "CLUB", 2: "DIAMOND",
             3: "HEART", 4: "NT", 5: "MISERE"}
 
+# effective_card's (order, suit) for the joker/bowers is JOKER_INDEX-relative
+# (there's no longer a fixed JOKER_VALUE/RIGHT_BOWER/LEFT_BOWER constant).
 TRUMP_RANK_BONUS = {
-    JOKER_VALUE: 1.0,
-    RIGHT_BOWER: 1.0,
-    LEFT_BOWER: 0.95,
+    JOKER_INDEX + 3: 1.0,   # joker
+    JOKER_INDEX + 2: 1.0,   # right bower
+    JOKER_INDEX + 1: 0.95,  # left bower
     ACE: 0.9,
     KING: 0.75,
     QUEEN: 0.6,
@@ -35,7 +37,7 @@ def _make_suit_bid(cards: list[int], suit: int) -> float:
     """
     Estimate expected tricks if `suit` is trump.
     """
-    effective = [effective_card(card, suit, NT) for card in cards]
+    effective = [effective_card(card, suit) for card in cards]
     trump = sorted((r for r, s in effective if s == suit), reverse=True)
     offsuit: dict[int, list[int]] = {}
     for r, s in effective:
@@ -69,7 +71,7 @@ def _make_nt_bid(cards: list[int]) -> float:
     """
     Estimate expected tricks with no trump suit (no bower promotion).
     """
-    effective = [effective_card(card, NT, NT) for card in cards]
+    effective = [effective_card(card, NT) for card in cards]
     by_suit: dict[int, list[int]] = {}
     for r, s in effective:
         by_suit.setdefault(s, []).append(r)
@@ -98,7 +100,7 @@ def _misere_score(cards: list[int]) -> float:
     Estimate a misere bid's value on the same ~0-10 scale used for the
     trick-count scores, so it can be compared directly against them.
     """
-    effective = [effective_card(card, NT, NT) for card in cards]
+    effective = [effective_card(card, NT) for card in cards]
     by_suit: dict[int, list[int]] = {}
     for r, s in effective:
         by_suit.setdefault(s, []).append(r)
@@ -150,27 +152,95 @@ def make_bid(cards: list[int]) -> tuple[int, int]:
 
 #___________________Kitty Heuristic_________________#
 
+def _pick_discards(candidates: list[tuple[int, int, int]]) -> list[tuple[int, int, int]]:
+    """
+    Given a list of (card, rank, suit) candidates that are already safe to consider
+    discarding (e.g. trump already excluded), pick 3: protect aces and guarded kings
+    where doing so still leaves enough candidates, then take from whichever suit is
+    weakest overall (lowest total rank), preferring to fully void it.
+    """
+    non_aces = [c for c in candidates if c[1] < ACE]
+    if len(non_aces) >= 3:
+        candidates = non_aces
+
+    suit_counts: dict[int, int] = {}
+    for c in candidates:
+        suit_counts[c[2]] = suit_counts.get(c[2], 0) + 1
+    unprotected = [c for c in candidates if not (c[1] == KING and suit_counts[c[2]] > 1)]
+    if len(unprotected) >= 3:
+        candidates = unprotected
+
+    by_suit: dict[int, list[tuple[int, int, int]]] = {}
+    for c in candidates:
+        by_suit.setdefault(c[2], []).append(c)
+    for group in by_suit.values():
+        group.sort(key=lambda c: c[1])
+
+    ordered_suits = sorted(by_suit, key=lambda s: sum(c[1] for c in by_suit[s]))
+
+    discards: list[tuple[int, int, int]] = []
+    for s in ordered_suits:
+        for c in by_suit[s]:
+            if len(discards) == 3:
+                return discards
+            discards.append(c)
+    return discards
+
+
 def _discard_kitty_suit(cards: list[int], trump: int) -> tuple[int, int, int]:
     """
-    Starting with the list of cards, removes trumps, then aces, then protected kings,
-    while checking that the number of candidate cards is greater than or equal to 3. Then, short
-    suits whatever suit has cards with the lowest sum.
+    Choose 3 cards to discard from a kitty-augmented hand for a suit contract.
+    Trump is never discarded except as a last resort, if there aren't even 3
+    non-trump cards to choose from.
     """
-    
-    effective_cards = [effective_card(card, trump, trump) for card in cards]
-    
-    candidates = [card for card in effective_cards if card[1] != trump]
+    effective = [(card,) + effective_card(card, trump) for card in cards]
+    non_trump = [c for c in effective if c[2] != trump]
+    trump_cards = sorted((c for c in effective if c[2] == trump), key=lambda c: c[1])
 
-     
+    candidates = non_trump if len(non_trump) >= 3 else non_trump + trump_cards[:3 - len(non_trump)]
+    discards = _pick_discards(candidates)
+    return (discards[0][0], discards[1][0], discards[2][0])
 
 
+def _discard_kitty_nt(cards: list[int]) -> tuple[int, int, int]:
+    """
+    Choose 3 cards to discard from a kitty-augmented hand for a no-trump contract.
+    There's no trump suit to protect, so every card is a candidate.
+    """
+    effective = [(card,) + effective_card(card, NT) for card in cards]
+    discards = _pick_discards(effective)
+    return (discards[0][0], discards[1][0], discards[2][0])
 
 
-def _discard_kitty_misere(cards: list[int], bid: int):
-    raise NotImplementedError
+def _discard_kitty_misere(cards: list[int]) -> tuple[int, int, int]:
+    """
+    Choose 3 cards to discard from a kitty-augmented hand for a misere contract.
+    The goal is to discard the highest cards least protected by lower cards in the 
+    same suit to duck behind later.
+    """
+    effective = [(card,) + effective_card(card, NT) for card in cards]
 
-def _discard_kitt_nt(cards: list[int], bid: int) -> tuple[int, int, int]:
-    raise NotImplementedError
+    by_suit: dict[int, list[tuple[int, int, int]]] = {}
+    for c in effective:
+        by_suit.setdefault(c[2], []).append(c)
+
+    def danger(c: tuple[int, int, int]) -> float:
+        _, rank, suit = c
+        cover = sum(1 for other in by_suit[suit] if other[1] < rank)
+        return rank - 0.5 * cover
+
+    discards = sorted(effective, key=danger, reverse=True)[:3]
+    return (discards[0][0], discards[1][0], discards[2][0])
+
 
 def discard_kitty(cards: list[int], bid: int) -> tuple[int, int, int]:
-    raise NotImplementedError
+    """
+    Choose 3 cards to discard from a 13-card kitty-augmented hand, given the
+    winning contract (using the same 0-5 SUIT_KEY convention make_bid() returns:
+    0-3 = trump suit, NT, or MISERE).
+    """
+    if bid == MISERE:
+        return _discard_kitty_misere(cards)
+    if bid == NT:
+        return _discard_kitty_nt(cards)
+    return _discard_kitty_suit(cards, bid)
