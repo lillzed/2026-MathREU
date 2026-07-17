@@ -5,7 +5,6 @@ Actions:
     44..68  6 Spade - 10 No Trump (Bids)
     69      Misere
     70      Open Misere
-    71..74  Spades - Hearts (Pick Joker Suit)
 """
 
 import numpy as np
@@ -19,12 +18,11 @@ if TYPE_CHECKING:
     # for anything but a type hint would be a circular import.
     from .game import FiveHundredGame
 
-ACTION_SPACE_SIZE = 75
 BID_BASE = 44
 PASS = 43
 MISERE = 69
 OPEN_MISERE = 70
-JOKER_SUIT_BASE = 71
+ACTION_SPACE_SIZE = OPEN_MISERE + 1
 SPADES, CLUBS, DIAMONDS, HEARTS, NO_SUIT = 0, 1, 2, 3, 4
 NUM_CARDS = cards.JOKER_INDEX - cards.CARD_START_INDEX + 1
 
@@ -55,16 +53,6 @@ def decode_bid_action(id: int) -> tuple[int, int, bool]:
     elif id == OPEN_MISERE:
         return (10, NO_SUIT, True)
     return ((id - BID_BASE + 30) // 5, (id - BID_BASE) % 5, False)
-
-
-def joker_suit_action(suit: int) -> int:
-    """Returns the ID of choosing the given suit for the joker."""
-    return JOKER_SUIT_BASE + suit
-
-
-def decode_joker_suit_action(id: int) -> int:
-    """Returns the suit of the joker given the ID for assigning the joker to that suit."""
-    return (JOKER_SUIT_BASE - id) % 5
 
 
 def action_mask(legal_actions: Iterable[int]) -> npt.NDArray[np.int8]:

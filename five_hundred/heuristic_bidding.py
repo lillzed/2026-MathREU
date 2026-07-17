@@ -1,5 +1,3 @@
-import random
-
 from .cards import (
     effective_card,
     QUEEN, KING, ACE, JOKER_INDEX,

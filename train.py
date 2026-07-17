@@ -1,12 +1,12 @@
 import argparse
 
-from sb3_contrib import MaskablePPO
-from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback
-from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
-from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback
-from stable_baselines3.common.vec_env import VecMonitor
+from sb3_contrib import MaskablePPO #type: ignore
+from sb3_contrib.common.maskable.callbacks import MaskableEvalCallback #type: ignore
+from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy #type: ignore
+from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback #type: ignore
+from stable_baselines3.common.vec_env import VecMonitor #type: ignore
 
-from five_hundred.training_env import FiveHundredVecEnv
+from five_hundred.training_env import FiveHundredVecEnv #type: ignore
 
 
 def main() -> None:

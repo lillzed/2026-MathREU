@@ -7,7 +7,7 @@ from pettingzoo.utils import wrappers
 
 from . import encoding as enc
 from . import render as trace
-from .constants import DEFAULT_MAX_HANDS, NUM_PLAYERS
+from .constants import DEFAULT_MAX_HANDS, NUM_PLAYERS, TRICKS_PER_HAND
 from .game import FiveHundredGame
 
 
@@ -49,6 +49,7 @@ class FiveHundredEnv(AECEnv):
         self.truncations = {}
         self.infos = {}
         self.agent_selection = None
+        self._outcome_decided = False
 
     def observation_space(self, agent: str) -> spaces.Dict:
         """
@@ -112,10 +113,102 @@ class FiveHundredEnv(AECEnv):
         self.truncations = {a: False for a in self.agents}
         self.infos = {a: {} for a in self.agents}
         self.agent_selection = self.possible_agents[self._game.current_player]
+        self._outcome_decided = False
 
         self._trace_lines = [trace.describe_new_hand(self._game)]
         if self.render_mode == "human":
             self.render()
+
+    def _contract_ranks(self, misere: bool, highest_bet: int) -> tuple[int, int]:
+        """
+        How many tricks each side needs won for the hand to go in their own
+        favor: (attacking team's rank, defending team's rank).
+
+        Input:
+        - misere (bool) : whether the contract is misere/open misere
+        - highest_bet (int) : the winning bid's value (ignored for misere)
+
+        Output (tuple[int, int]):
+        - attacking team's rank, defending team's rank
+        """
+        if misere:
+            return 10, 1
+        return highest_bet, 11 - highest_bet
+
+    def _trick_reward(
+        self, bet_winner: int, misere: bool, highest_bet: int, trick_winner: int
+    ) -> dict[str, float]:
+        """
+        Per-trick reward for the trick that was just completed, keyed by
+        agent name. Whichever team's success condition just advanced gets
+        +1/their_rank, the other team gets -1/their_rank. For misere, the
+        team whose condition advances is the *opposite* of whoever physically
+        won the trick: the bidder winning a trick is bad for them (it's the
+        defenders' condition that advanced), and vice versa.
+
+        Input:
+        - bet_winner (int) : the seat ID of the hand's bidder
+        - misere (bool) : whether the contract is misere/open misere
+        - highest_bet (int) : the winning bid's value
+        - trick_winner (int) : the seat ID of the player who won the trick
+
+        Output (dict[str, float]):
+        - reward for this trick, keyed by agent name
+        """
+        attacker_rank, defender_rank = self._contract_ranks(misere, highest_bet)
+        attacker_team = bet_winner % 2
+        physical_winner_team = trick_winner % 2
+
+        benefiting_team = (1 - physical_winner_team) if misere else physical_winner_team
+
+        rank = attacker_rank if benefiting_team == attacker_team else defender_rank
+        reward = 1.0 / rank
+
+        return {
+            a: reward if self.agent_name_mapping[a] % 2 == benefiting_team else -reward
+            for a in self.agents
+        }
+
+    def _outcome_certain(
+        self,
+        bet_winner: int,
+        misere: bool,
+        highest_bet: int,
+        tricks_won: list[int],
+        tricks_played: int,
+    ) -> tuple[bool, int | None]:
+        """
+        Whether the hand's outcome is already mathematically decided given
+        tricks played so far, and if so, which team it favors.
+
+        Input:
+        - bet_winner (int) : the seat ID of the hand's bidder
+        - misere (bool) : whether the contract is misere/open misere
+        - highest_bet (int) : the winning bid's value
+        - tricks_won (list[int]) : tricks won per seat, after the trick that just completed
+        - tricks_played (int) : tricks completed so far this hand, after the trick that just completed
+
+        Output (tuple[bool, int | None]):
+        - whether the outcome is decided
+        - the team it favors, or None if not yet decided
+        """
+        attacker_team = bet_winner % 2
+
+        if misere:
+            if tricks_won[bet_winner] >= 1:
+                return True, 1 - attacker_team
+            if tricks_played == TRICKS_PER_HAND:
+                return True, attacker_team
+            return False, None
+
+        partner = (bet_winner + 2) % NUM_PLAYERS
+        attacker_tricks = tricks_won[bet_winner] + tricks_won[partner]
+        if attacker_tricks >= highest_bet:
+            return True, attacker_team
+        remaining = TRICKS_PER_HAND - tricks_played
+        if attacker_tricks + remaining < highest_bet:
+            return True, 1 - attacker_team
+        return False, None
 
     def step(self, action: int | None) -> None:
         """
@@ -140,6 +233,16 @@ class FiveHundredEnv(AECEnv):
         hand_before = self._game.hand_number
         action_line = trace.describe_action(phase_before, seat, action) if self.render_mode == "human" else None
 
+        # a trick-completing action can trigger _deal_new_hand() internally
+        # (game.py's _score_hand()), which resets bet_winner/tricks_won/etc.
+        # before step() returns -- so the contract state has to be captured
+        # here, before stepping, not read back off self._game afterward.
+        bet_winner_before = self._game.bet_winner
+        misere_before = self._game.misere
+        highest_bet_before = self._game.highest_bet
+        tricks_won_before = list(self._game.tricks_won)
+        tricks_played_before = self._game.tricks_played
+
         result = self._game.step(action)
 
         if self.render_mode == "human":
@@ -157,11 +260,28 @@ class FiveHundredEnv(AECEnv):
                 lines.append(trace.describe_new_hand(self._game))
             self._trace_lines = lines
 
-        self.rewards = {a: 0 for a in self.agents}
-        if result.team_score_deltas is not None:
-            for a in self.agents:
-                team = self.agent_name_mapping[a] % 2
-                self.rewards[a] = result.team_score_deltas[team]
+        self.rewards = {a: 0.0 for a in self.agents}
+        if result.trick_completed:
+            trick_reward = self._trick_reward(
+                bet_winner_before, misere_before, highest_bet_before, result.trick_winner
+            )
+            for a, r in trick_reward.items():
+                self.rewards[a] += r
+
+            tricks_won_after = list(tricks_won_before)
+            tricks_won_after[result.trick_winner] += 1
+            decided, favored_team = self._outcome_certain(
+                bet_winner_before, misere_before, highest_bet_before,
+                tricks_won_after, tricks_played_before + 1,
+            )
+            if decided and not self._outcome_decided:
+                self._outcome_decided = True
+                for a in self.agents:
+                    team = self.agent_name_mapping[a] % 2
+                    self.rewards[a] += 1.0 if team == favored_team else -1.0
+
+        if result.hand_completed:
+            self._outcome_decided = False
 
         if result.match_over or self._game.truncated:
             for a in self.agents:

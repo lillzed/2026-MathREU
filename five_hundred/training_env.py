@@ -13,19 +13,6 @@ class FiveHundredVecEnv(VecEnv):
     Adapts N independent play_only_env() AECEnvs into a single SB3 VecEnv for
     training one shared policy via self-play. Each slot's "agent identity"
     rotates through whichever of the 4 seats is currently up
-
-    Reward for each transition is the acting agent's own cumulative reward
-    since their last turn (PettingZoo's standard AEC accounting via last()),
-    which correctly attributes hand-completion payouts to whichever seat acts
-    next -- true for every hand completion within an ongoing match. The one
-    simplification: when a match ends, only the single agent selected right
-    after the terminal step has its payout surfaced as the terminal
-    transition; the other 3 seats' final payouts are real (PettingZoo applies
-    them to all 4 simultaneously) but aren't individually reported as their
-    own training transitions before the env auto-resets. Termination only
-    happens once every ~8 hands (see hybrid_env), so this trades a small
-    amount of terminal-signal density at match boundaries for a much simpler
-    adapter than replicating e.g. SuperSuit's per-seat slot bookkeeping.
     """
 
     def __init__(self, num_envs: int, seed: int | None = None, **env_kwargs: Any) -> None:
