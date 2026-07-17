@@ -159,15 +159,14 @@ def _discard_kitty_suit(cards: list[int], trump: int) -> tuple[int, int, int]:
     
     effective_cards = [effective_card(card, trump, trump) for card in cards]
     
-    candidates = [card for card in effective_cards if card[1] != trump else 0]
-    if len(candidates) < 3:
+    candidates = [card for card in effective_cards if card[1] != trump]
 
      
 
 
 
 
-def _discard_kitty_misere(cards: list[int], bid: int) -> tuple[int, int, int]:
+def _discard_kitty_misere(cards: list[int], bid: int):
     raise NotImplementedError
 
 def _discard_kitt_nt(cards: list[int], bid: int) -> tuple[int, int, int]:

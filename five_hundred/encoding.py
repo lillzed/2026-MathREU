@@ -111,7 +111,7 @@ _BLOCK_SIZES = [
     5,                     # 4. joker suit (S,C,D,H,none)
     1,                     # 5. highest bid value, normalized
     6,                     # 6. highest bid suit (S,C,D,H,N,none)
-    NUM_PLAYERS            # 7. highest bid per player
+    NUM_PLAYERS,           # 7. highest bid per player
     2,                     # 8. misere / open-misere flags
     NUM_PLAYERS,           # 9. passed[], relative
     5,                     # 10. current highest bidder, relative (+none)

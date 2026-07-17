@@ -75,6 +75,7 @@ class FiveHundredGame:
         self.kitty = deck[40:43]
         self.discards = []
 
+        self.bid_history = [None] * NUM_PLAYERS
         self.bet_winner = None
         self.highest_bet = 0
         self.highest_suit = None
@@ -215,6 +216,9 @@ class FiveHundredGame:
             self.highest_bet, self.highest_suit = value, suit
             self.misere, self.open_misere = False, False
             self.bet_winner = player
+        
+        if self.bid_history[player] is None or action is not enc.PASS_ACTION:
+            self.bid_history[player] = action
 
         if self.pass_count == NUM_PLAYERS:
             if self.highest_bet == 0:
