@@ -13,7 +13,6 @@ SUIT_KEY = {0: "SPADE", 1: "CLUB", 2: "DIAMOND",
             3: "HEART", 4: "NT", 5: "MISERE"}
 
 # effective_card's (order, suit) for the joker/bowers is JOKER_INDEX-relative
-# (there's no longer a fixed JOKER_VALUE/RIGHT_BOWER/LEFT_BOWER constant).
 TRUMP_RANK_BONUS = {
     JOKER_INDEX + 3: 1.0,   # joker
     JOKER_INDEX + 2: 1.0,   # right bower

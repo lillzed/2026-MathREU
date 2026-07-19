@@ -5,10 +5,15 @@ from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils import wrappers
 
+from . import cards
 from . import encoding as enc
 from . import render as trace
-from .constants import DEFAULT_MAX_HANDS, NUM_PLAYERS, TRICKS_PER_HAND
+from .constants import DEFAULT_MAX_HANDS, NUM_PLAYERS, Phase, TRICKS_PER_HAND
 from .game import FiveHundredGame
+
+# penalty for winning the trick-so-far with a higher card than needed;
+# trick rewards alone don't distinguish which card won
+_WASTE_PENALTY = 0.05
 
 
 class FiveHundredEnv(AECEnv):
@@ -119,24 +124,31 @@ class FiveHundredEnv(AECEnv):
         if self.render_mode == "human":
             self.render()
 
-    def _contract_ranks(self, misere: bool, highest_bet: int) -> tuple[int, int]:
+    def _contract_ranks(self, misere: bool, open_misere: bool, highest_bet: int) -> tuple[float, float]:
         """
         How many tricks each side needs won for the hand to go in their own
-        favor: (attacking team's rank, defending team's rank).
+        favor: (attacking team's rank, defending team's rank). Lower rank
+        means a bigger +-1/rank swing, i.e. higher stakes.
 
         Input:
         - misere (bool) : whether the contract is misere/open misere
+        - open_misere (bool) : whether the misere is specifically open misere
+          (ignored unless misere is True)
         - highest_bet (int) : the winning bid's value (ignored for misere)
 
-        Output (tuple[int, int]):
+        Output (tuple[float, float]):
         - attacking team's rank, defending team's rank
         """
         if misere:
-            return 10, 1
+            # open misere pays OPEN_MISERE_POINTS (500) vs. regular misere's
+            # MISERE_POINTS (250) -- halve both ranks so the reward swing is
+            # twice as large, matching the real stakes, instead of scoring an
+            # open misere identically to a regular one.
+            return (5, 0.5) if open_misere else (10, 1)
         return highest_bet, 11 - highest_bet
 
     def _trick_reward(
-        self, bet_winner: int, misere: bool, highest_bet: int, trick_winner: int
+        self, bet_winner: int, misere: bool, open_misere: bool, highest_bet: int, trick_winner: int
     ) -> dict[str, float]:
         """
         Per-trick reward for the trick that was just completed, keyed by
@@ -149,13 +161,14 @@ class FiveHundredEnv(AECEnv):
         Input:
         - bet_winner (int) : the seat ID of the hand's bidder
         - misere (bool) : whether the contract is misere/open misere
+        - open_misere (bool) : whether the misere is specifically open misere
         - highest_bet (int) : the winning bid's value
         - trick_winner (int) : the seat ID of the player who won the trick
 
         Output (dict[str, float]):
         - reward for this trick, keyed by agent name
         """
-        attacker_rank, defender_rank = self._contract_ranks(misere, highest_bet)
+        attacker_rank, defender_rank = self._contract_ranks(misere, open_misere, highest_bet)
         attacker_team = bet_winner % 2
         physical_winner_team = trick_winner % 2
 
@@ -168,6 +181,52 @@ class FiveHundredEnv(AECEnv):
             a: reward if self.agent_name_mapping[a] % 2 == benefiting_team else -reward
             for a in self.agents
         }
+
+    def _card_efficiency_penalty(
+        self,
+        played: int,
+        hand_before: set[int],
+        trick_before: list[tuple[int, int]],
+        trump: int,
+        lead_suit: int | None,
+    ) -> float:
+        """
+        Penalize beating the trick-so-far by more than necessary: if a
+        strictly cheaper card from the same (pre-play) hand would also have
+        won against the best card on the table, this play burned a better
+        card for no reason.
+
+        Input:
+        - played (int) : the card the current player just played
+        - hand_before (set[int]) : their hand before playing (includes `played`)
+        - trick_before (list[tuple[int, int]]) : (player, card) pairs already
+          played this trick before this action; empty if this play led the trick
+        - trump (int) : this hand's trump suit
+        - lead_suit (int | None) : the trick's lead suit, or None if this play led it
+
+        Output (float):
+        - 0.0 if there was nothing to overtake or no cheaper card would have
+          done the job, else -_WASTE_PENALTY
+        """
+        if not trick_before:
+            return 0.0
+
+        best_card = trick_before[0][1]
+        for _, card in trick_before[1:]:
+            if cards.compare_cards(card, best_card, trump, lead_suit) == 1:
+                best_card = card
+
+        if cards.compare_cards(played, best_card, trump, lead_suit) != 1:
+            return 0.0
+
+        played_rank = cards.effective_card(played, trump)[0]
+        cheaper_alternatives = [
+            c for c in hand_before
+            if c != played
+            and cards.effective_card(c, trump)[0] < played_rank
+            and cards.compare_cards(c, best_card, trump, lead_suit) == 1
+        ]
+        return -_WASTE_PENALTY if cheaper_alternatives else 0.0
 
     def _outcome_certain(
         self,
@@ -239,9 +298,17 @@ class FiveHundredEnv(AECEnv):
         # here, before stepping, not read back off self._game afterward.
         bet_winner_before = self._game.bet_winner
         misere_before = self._game.misere
+        open_misere_before = self._game.open_misere
         highest_bet_before = self._game.highest_bet
         tricks_won_before = list(self._game.tricks_won)
         tricks_played_before = self._game.tricks_played
+
+        play_hand_before = None
+        if phase_before == Phase.PLAY:
+            play_hand_before = set(self._game.hands[seat])
+            trick_before = list(self._game.current_trick)
+            trump_before = self._game.trump
+            lead_suit_before = self._game.lead_suit
 
         result = self._game.step(action)
 
@@ -261,9 +328,16 @@ class FiveHundredEnv(AECEnv):
             self._trace_lines = lines
 
         self.rewards = {a: 0.0 for a in self.agents}
+        # card values invert under misere (low cards are the ones worth
+        # keeping), so the efficiency penalty only applies to standard contracts
+        if play_hand_before is not None and not misere_before:
+            self.rewards[agent] += self._card_efficiency_penalty(
+                action, play_hand_before, trick_before, trump_before, lead_suit_before
+            )
+
         if result.trick_completed:
             trick_reward = self._trick_reward(
-                bet_winner_before, misere_before, highest_bet_before, result.trick_winner
+                bet_winner_before, misere_before, open_misere_before, highest_bet_before, result.trick_winner
             )
             for a, r in trick_reward.items():
                 self.rewards[a] += r

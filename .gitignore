@@ -1,5 +1,8 @@
 data/raw/
 __pycache__/
+.claude/settings.local.json
+runs/
+desktop.ini
 500/*.o
 500/server.exe
 500/server
