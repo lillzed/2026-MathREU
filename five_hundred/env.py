@@ -219,11 +219,11 @@ class FiveHundredEnv(AECEnv):
         if cards.compare_cards(played, best_card, trump, lead_suit) != 1:
             return 0.0
 
-        played_rank = cards.effective_card(played, trump)[0]
+        played_value = cards.conservation_value(played, trump)
         cheaper_alternatives = [
             c for c in hand_before
             if c != played
-            and cards.effective_card(c, trump)[0] < played_rank
+            and cards.conservation_value(c, trump) < played_value
             and cards.compare_cards(c, best_card, trump, lead_suit) == 1
         ]
         return -_WASTE_PENALTY if cheaper_alternatives else 0.0

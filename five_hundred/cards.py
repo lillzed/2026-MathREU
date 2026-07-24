@@ -67,6 +67,20 @@ def effective_suit(card: int, trump: int) -> int:
     return effective_card(card, trump)[1]
 
 
+def conservation_value(card: int, trump: int) -> tuple[bool, int]:
+    """
+    A sortable (is_trump, order) key for comparing a card's standalone worth
+    across suits, e.g. "is this card cheaper than that one" independent of
+    any particular trick. Trump always outranks non-trump regardless of raw
+    rank -- effective_card's rank component is only meaningful for
+    comparing cards within the same effective suit, since trump is the only
+    way to win a trick when void in the led suit and so is worth more than
+    its face rank suggests.
+    """
+    order, suit = effective_card(card, trump)
+    return (suit == trump, order)
+
+
 def compare_cards(card1: int, card2: int, trump: int, lead: int = NO_SUIT) -> int:
     """
     Returns 1 if card1 beats card2, -1 if card2 beats card1, and 0 if more info is needed,

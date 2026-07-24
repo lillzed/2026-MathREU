@@ -88,6 +88,7 @@ class FiveHundredGame:
 
         self.tricks_won = [0] * NUM_PLAYERS
         self.card_history: dict[int, tuple[int, int]] = {}
+        self.void_suits: list[set[int]] = [set() for _ in range(NUM_PLAYERS)]
         self.current_trick = []
         self.trick_order = []
         self.trick_play_idx = 0
@@ -313,9 +314,15 @@ class FiveHundredGame:
             self.lead_suit = cards.effective_suit(card, self.trump)
             self.trick_winner = player
             self.winning_card = card
-        elif cards.compare_cards(card, self.winning_card, self.trump, self.lead_suit) == 1:
-            self.winning_card = card
-            self.trick_winner = player
+        else:
+            if cards.effective_suit(card, self.trump) != self.lead_suit:
+                # legal_actions() only allows this when the player held no
+                # card of the lead suit, so this is a certain inference,
+                # not a guess.
+                self.void_suits[player].add(self.lead_suit)
+            if cards.compare_cards(card, self.winning_card, self.trump, self.lead_suit) == 1:
+                self.winning_card = card
+                self.trick_winner = player
 
         self.trick_play_idx += 1
         if self.trick_play_idx < len(self.trick_order):

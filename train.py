@@ -9,6 +9,7 @@ from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback 
 from stable_baselines3.common.vec_env import VecMonitor #type: ignore
 
 from five_hundred.callbacks import OpponentPoolCallback
+from five_hundred.mc_bot import MonteCarloCardPolicy
 from five_hundred.opponent_pool import OpponentPool
 from five_hundred.training_env import FiveHundredVecEnv #type: ignore
 
@@ -85,9 +86,16 @@ def main() -> None:
                          help="max number of frozen policy snapshots kept as self-play opponents")
     parser.add_argument("--opponent-update-freq", type=int, default=100_000,
                          help="freeze a new opponent snapshot every N environment timesteps")
-    parser.add_argument("--heuristic-opponent-weight", type=float, default=0.2,
-                         help="fraction of episodes played against the rule-based card player "
-                              "(five_hundred/heuristic_play.py) instead of a policy snapshot")
+    parser.add_argument("--anchor-weight", type=float, default=1.0,
+                         help="fraction of episodes played against the anchor opponent "
+                              "(five_hundred/mc_bot.py's Monte Carlo bot) instead of a "
+                              "self-play policy snapshot")
+    parser.add_argument("--anchor-determinizations", type=int, default=12,
+                         help="hidden-deal samples the anchor bot averages over per decision; "
+                              "higher plays stronger but slower")
+    parser.add_argument("--opponent-workers", type=int, default=max(1, (os.cpu_count() or 4) - 1),
+                         help="worker processes for computing anchor-bot decisions in parallel "
+                              "across envs (1 disables the pool and runs inline)")
     parser.add_argument("--seed-pool-max", type=int, default=50,
                          help="preload the opponent pool with up to N past checkpoints from "
                               "runs/<run-name>/checkpoints (0 disables)")
@@ -103,11 +111,19 @@ def main() -> None:
     tensorboard_dir = f"{run_dir}/tensorboard"
 
     opponent_pool = OpponentPool(
-        max_size=args.opponent_pool_size, seed=args.seed, heuristic_weight=args.heuristic_opponent_weight
+        max_size=args.opponent_pool_size,
+        seed=args.seed,
+        anchor_weight=args.anchor_weight,
+        anchor=MonteCarloCardPolicy(num_determinizations=args.anchor_determinizations, seed=args.seed),
     )
     _seed_pool_from_checkpoints(opponent_pool, checkpoint_dir, args.seed_pool_max)
-    venv = VecMonitor(FiveHundredVecEnv(num_envs=args.num_envs, opponent_pool=opponent_pool, seed=args.seed))
-    eval_venv = VecMonitor(FiveHundredVecEnv(num_envs=4, opponent_pool=opponent_pool, seed=args.seed + 10_000))
+    venv = VecMonitor(FiveHundredVecEnv(
+        num_envs=args.num_envs, opponent_pool=opponent_pool, seed=args.seed,
+        opponent_workers=args.opponent_workers,
+    ))
+    eval_venv = VecMonitor(FiveHundredVecEnv(
+        num_envs=4, opponent_pool=opponent_pool, seed=args.seed + 10_000,
+    ))
 
     # the ~575-dim observation needs more capacity than SB3's 64x64 default
     policy_kwargs = dict(net_arch=dict(pi=[256, 256], vf=[256, 256]))
