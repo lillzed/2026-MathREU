@@ -1,10 +1,10 @@
-data/raw/
+data_collection/data/raw/
 __pycache__/
 .claude/settings.local.json
 runs/
 desktop.ini
-500/*.o
-500/server.exe
-500/server
-500/client.exe
-500/client
+data_collection/500/*.o
+data_collection/500/server.exe
+data_collection/500/server
+data_collection/500/client.exe
+data_collection/500/client
