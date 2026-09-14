@@ -11,9 +11,10 @@ It progresses in three stages, each in its own directory:
 1. **[`rl-fundamentals/`](rl-fundamentals)** — from-scratch implementations of
    classic RL algorithms (bandits, dynamic programming, Monte Carlo and
    TD learning) used to build intuition before tackling a full card game.
-2. **[`data_collection/`](data_collection)** — a vendored, headless build of a
-   [command-line 500 implementation](data_collection/500) is used to generate
-   bot-vs-bot games, which are parsed into structured, per-decision datasets.
+2. **[`data_collection/`](data_collection)** — a headless build of a
+   [command-line 500 implementation](https://github.com/Gareth001/500) (cloned
+   separately, see its README) generates bot-vs-bot games, which are parsed
+   into structured, per-decision datasets.
 3. **[`five_hundred/`](five_hundred)** — a Python game
    engine and [PettingZoo](https://pettingzoo.farama.org/) environment for 500,
    with a heuristic bidding/play baseline, a perfect-information Monte Carlo
@@ -40,7 +41,7 @@ It progresses in three stages, each in its own directory:
 ├── evaluate_vs_heuristic.py  # win rate of every checkpoint in a run vs. the fixed heuristic bot
 ├── play_vs_bots.py           # play an interactive game against trained/heuristic bots
 ├── data_collection/          # earlier data-generation phase, see its own README
-│   ├── 500/                  #   vendored command-line 500 engine (bots + server/client)
+│   ├── 500/                  #   Gareth001/500 command-line engine, cloned in (not vendored)
 │   ├── collect_and_parse.py  #   runs bot games and parses logs into JSONL decision records
 │   ├── rules.py               #   pure-Python port of the C engine's legality rules
 │   └── data/                  #   collected datasets (games.jsonl, decisions.jsonl)
@@ -125,10 +126,10 @@ the loaded checkpoint or a heuristic, depending on setup).
 Before the RL environment existed, `data_collection/` was used to generate a
 labeled dataset of real bot decisions (bid/discard/play, with hand contents
 and legal actions reconstructed from the game's text log) by running many
-games of the vendored command-line implementation and parsing its output.
-See [`data_collection/README.md`](data_collection/README.md) for details —
-this dataset informed the design of the heuristic bidding/play baselines
-used as the training opponent above.
+games of a command-line 500 implementation and parsing its output. See
+[`data_collection/README.md`](data_collection/README.md) for setup and
+details — this dataset informed the design of the heuristic bidding/play
+baselines used as the training opponent above.
 
 ## RL fundamentals
 

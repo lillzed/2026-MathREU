@@ -3,8 +3,4 @@ __pycache__/
 .claude/settings.local.json
 runs/
 desktop.ini
-data_collection/500/*.o
-data_collection/500/server.exe
-data_collection/500/server
-data_collection/500/client.exe
-data_collection/500/client
+data_collection/500/

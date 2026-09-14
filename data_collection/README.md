@@ -2,17 +2,16 @@
 
 Before the `five_hundred/` RL environment existed, this directory was used to
 build a labeled dataset of real 500 decisions by running many bot-vs-bot
-games through a vendored command-line implementation of the game and parsing
-its text output.
+games through a command-line implementation of the game and parsing its text
+output.
 
 ## Contents
 
-- **`500/`** — a vendored, unmodified copy of
+- **`500/`** (not included — see Setup below) —
   [Gareth001/500](https://github.com/Gareth001/500), a command-line/C
-  implementation of 500 with built-in bots (see [`500/README.md`](500/README.md)
-  for its own documentation). It's used here purely as a headless, offline
-  game engine — not for networked play — to generate legal, rules-correct
-  games between bots.
+  implementation of 500 with built-in bots. Used here purely as a headless,
+  offline game engine — not for networked play — to generate legal,
+  rules-correct games between bots.
 - **`rules.py`** — a pure-Python port of just the rule logic needed to
   reconstruct legal actions from the C engine's text log (bid legality,
   follow-suit legality), mirroring `server.c`/`cards.c` so decision-level
@@ -27,14 +26,20 @@ its text output.
     available, and the action actually taken
 - **`data/`** — the collected datasets described above.
 
-## Usage
+## Setup
 
-First compile the vendored engine (requires `gcc`/`make`, e.g. via MinGW on
-Windows):
+This directory expects a compiled copy of
+[Gareth001/500](https://github.com/Gareth001/500) at `data_collection/500/`.
+It isn't vendored in this repo (that project has no license, so its source
+isn't redistributed here) — clone and build it yourself:
 
 ```bash
+git clone https://github.com/Gareth001/500 500
 cd 500 && make && cd ..
 ```
+
+Requires `gcc`/`make` (e.g. via MinGW on Windows). `data_collection/500/` is
+gitignored, so nothing under it gets committed.
 
 Then collect and parse games:
 
